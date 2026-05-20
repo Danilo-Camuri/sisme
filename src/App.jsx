@@ -6,17 +6,12 @@ import Cadastro from './components/auth/Cadastro'
 import { RecuperarSenha, NovaSenha } from './components/auth/Senha'
 import Onboarding from './pages/onboarding/Onboarding'
 import Home from './pages/Home'
+import CheckIn from './pages/aluno/CheckIn'
 
-// Rota protegida que também redireciona para onboarding se necessário
 function AlunoRoute({ children }) {
   const { aluno, loading } = useAuth()
-
   if (loading) return null
-
-  if (aluno && !aluno.onboarding_ok) {
-    return <Navigate to="/onboarding" replace />
-  }
-
+  if (aluno && !aluno.onboarding_ok) return <Navigate to="/onboarding" replace />
   return children
 }
 
@@ -31,23 +26,18 @@ export default function App() {
           <Route path="/nova-senha" element={<NovaSenha />} />
           <Route
             path="/onboarding"
-            element={
-              <ProtectedRoute>
-                <Onboarding />
-              </ProtectedRoute>
-            }
+            element={<ProtectedRoute><Onboarding /></ProtectedRoute>}
           />
           <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <AlunoRoute>
-                  <Home />
-                </AlunoRoute>
-              </ProtectedRoute>
-            }
+            path="/home"
+            element={<ProtectedRoute><AlunoRoute><Home /></AlunoRoute></ProtectedRoute>}
           />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route
+            path="/checkin"
+            element={<ProtectedRoute><AlunoRoute><CheckIn /></AlunoRoute></ProtectedRoute>}
+          />
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
