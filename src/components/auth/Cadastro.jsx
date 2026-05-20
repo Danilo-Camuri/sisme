@@ -4,9 +4,15 @@ import { useAuth } from '../../hooks/useAuth'
 import { Input, Button, Alert } from '../ui/FormElements'
 
 const STEPS = ['escola', 'conta', 'senha']
+const TITLES = ['Sua escola', 'Seus dados', 'Sua senha']
+const SUBTITLES = [
+  'Informe o código da escola e sua matrícula',
+  'Como vamos te chamar e como te encontrar',
+  'Crie uma senha para proteger sua conta'
+]
 
 export default function Cadastro() {
-  const { cadastrar } = useAuth()
+  const { validarEscolaMatricula, cadastrar } = useAuth()
   const navigate = useNavigate()
   const [step, setStep] = useState(0)
   const [form, setForm] = useState({
@@ -17,6 +23,8 @@ export default function Cadastro() {
     senha: '',
     senhaConfirm: ''
   })
+  // Guardamos escolaId e alunoId após validação do step 0
+  const [validacao, setValidacao] = useState({ escolaId: null, alunoId: null })
   const [errors, setErrors] = useState({})
   const [globalError, setGlobalError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -30,50 +38,68 @@ export default function Cadastro() {
     }
   }
 
-  function validateStep() {
+  function validateLocal() {
     const errs = {}
-
     if (step === 0) {
       if (!form.codigoEscola.trim()) errs.codigoEscola = 'Informe o código da escola'
       if (!form.matricula.trim()) errs.matricula = 'Informe sua matrícula'
     }
-
     if (step === 1) {
       if (!form.nome.trim()) errs.nome = 'Informe seu nome'
       if (!form.email.trim()) errs.email = 'Informe seu e-mail'
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'E-mail inválido'
     }
-
     if (step === 2) {
       if (!form.senha) errs.senha = 'Crie uma senha'
-      else if (form.senha.length < 8) errs.senha = 'A senha deve ter pelo menos 8 caracteres'
+      else if (form.senha.length < 8) errs.senha = 'Mínimo 8 caracteres'
       if (form.senha !== form.senhaConfirm) errs.senhaConfirm = 'As senhas não coincidem'
     }
-
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
 
   async function handleNext(e) {
     e.preventDefault()
-    if (!validateStep()) return
+    if (!validateLocal()) return
 
+    // Step 0: valida escola e matrícula no servidor antes de avançar
+    if (step === 0) {
+      setLoading(true)
+      const result = await validarEscolaMatricula({
+        codigoEscola: form.codigoEscola,
+        matricula: form.matricula
+      })
+      setLoading(false)
+
+      if (result.error) {
+        setGlobalError(result.error)
+        return
+      }
+
+      setValidacao({ escolaId: result.escolaId, alunoId: result.alunoId })
+      setStep(1)
+      return
+    }
+
+    // Steps intermediários: avança
     if (step < STEPS.length - 1) {
       setStep(s => s + 1)
       return
     }
 
-    // Último step: envia cadastro
+    // Step final: cria a conta
     setLoading(true)
-    const result = await cadastrar(form)
+    const result = await cadastrar({
+      email: form.email,
+      senha: form.senha,
+      nome: form.nome,
+      escolaId: validacao.escolaId,
+      alunoId: validacao.alunoId
+    })
     setLoading(false)
 
     if (result.error) {
       setGlobalError(result.error)
-      // Se erro de escola/matrícula, volta ao step 0
-      if (result.error.includes('escola') || result.error.includes('atrícula')) {
-        setStep(0)
-      }
       return
     }
 
@@ -110,7 +136,6 @@ export default function Cadastro() {
     <div style={pageStyle}>
       <div style={cardStyle}>
         <Logo />
-
         <StepIndicator step={step} total={STEPS.length} />
 
         <div style={{ marginBottom: '28px' }}>
@@ -131,7 +156,7 @@ export default function Cadastro() {
                 label="Código da escola"
                 value={form.codigoEscola}
                 onChange={set('codigoEscola')}
-                placeholder="Ex: COLEGIO2025"
+                placeholder="Ex: TESTE2025"
                 error={errors.codigoEscola}
                 hint="Você recebeu este código da sua escola"
                 autoCapitalize="characters"
@@ -200,7 +225,7 @@ export default function Cadastro() {
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => setStep(s => s - 1)}
+                onClick={() => { setStep(s => s - 1); setGlobalError('') }}
                 style={{ flex: 1 }}
               >
                 Voltar
@@ -223,21 +248,12 @@ export default function Cadastro() {
   )
 }
 
-const TITLES = ['Sua escola', 'Seus dados', 'Sua senha']
-const SUBTITLES = [
-  'Informe o código da escola e sua matrícula',
-  'Como vamos te chamar e como te encontrar',
-  'Crie uma senha para proteger sua conta'
-]
-
 function StepIndicator({ step, total }) {
   return (
     <div style={{ display: 'flex', gap: '6px', marginBottom: '28px' }}>
       {Array.from({ length: total }).map((_, i) => (
         <div key={i} style={{
-          height: '3px',
-          flex: 1,
-          borderRadius: '2px',
+          height: '3px', flex: 1, borderRadius: '2px',
           background: i <= step ? 'var(--accent-primary)' : 'var(--border)',
           transition: 'background 0.3s'
         }} />
@@ -250,10 +266,8 @@ function Logo() {
   return (
     <div style={{ marginBottom: '36px', display: 'flex', alignItems: 'center', gap: '10px' }}>
       <div style={{
-        width: '36px', height: '36px',
-        background: 'var(--accent-primary)',
-        borderRadius: '10px',
-        display: 'flex', alignItems: 'center', justifyContent: 'center'
+        width: '36px', height: '36px', background: 'var(--accent-primary)',
+        borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center'
       }}>
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
           <path d="M10 2C10 2 4 5 4 10.5C4 14 6.5 17 10 17C13.5 17 16 14 16 10.5C16 5 10 2 10 2Z" fill="white" fillOpacity="0.9"/>
@@ -268,19 +282,12 @@ function Logo() {
 }
 
 const pageStyle = {
-  minHeight: '100dvh',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
+  minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center',
   padding: '24px 20px',
   background: `radial-gradient(ellipse at top, rgba(124,106,247,0.12) 0%, var(--bg) 60%)`
 }
 
 const cardStyle = {
-  width: '100%',
-  maxWidth: '400px',
-  background: 'var(--bg-card)',
-  borderRadius: 'var(--radius-lg)',
-  padding: '36px 32px',
-  border: '1px solid var(--border)'
+  width: '100%', maxWidth: '400px', background: 'var(--bg-card)',
+  borderRadius: 'var(--radius-lg)', padding: '36px 32px', border: '1px solid var(--border)'
 }
