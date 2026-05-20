@@ -7,6 +7,7 @@ import { RecuperarSenha, NovaSenha } from './components/auth/Senha'
 import Onboarding from './pages/onboarding/Onboarding'
 import Home from './pages/Home'
 import CheckIn from './pages/aluno/CheckIn'
+import ConversaScreen from './pages/aluno/ConversaScreen';
 
 function AlunoRoute({ children }) {
   const { aluno, loading } = useAuth()
@@ -36,6 +37,10 @@ export default function App() {
             path="/checkin"
             element={<ProtectedRoute><AlunoRoute><CheckIn /></AlunoRoute></ProtectedRoute>}
           />
+          <Route
+  path="/conversa"
+  element={<ProtectedRoute><AlunoRoute><ConversaScreen onBack={() => window.history.back()} /></AlunoRoute></ProtectedRoute>}
+/>
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
