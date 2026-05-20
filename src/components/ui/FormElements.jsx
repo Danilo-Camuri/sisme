@@ -1,0 +1,178 @@
+import { useState } from 'react'
+import { Eye, EyeOff, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react'
+
+const styles = {
+  fieldWrap: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    width: '100%'
+  },
+  label: {
+    fontSize: '13px',
+    fontWeight: '500',
+    color: 'var(--text-secondary)',
+    letterSpacing: '0.02em'
+  },
+  inputWrap: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center'
+  },
+  input: {
+    width: '100%',
+    background: 'var(--bg-input)',
+    border: '1px solid var(--border)',
+    borderRadius: 'var(--radius-sm)',
+    padding: '14px 16px',
+    fontSize: '16px',
+    color: 'var(--text-primary)',
+    outline: 'none',
+    transition: 'border-color 0.2s',
+    WebkitAppearance: 'none'
+  },
+  eyeBtn: {
+    position: 'absolute',
+    right: '14px',
+    background: 'none',
+    border: 'none',
+    color: 'var(--text-muted)',
+    cursor: 'pointer',
+    padding: '4px',
+    display: 'flex',
+    alignItems: 'center'
+  },
+  fieldError: {
+    fontSize: '12px',
+    color: 'var(--accent-danger)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px'
+  }
+}
+
+export function Input({ label, type = 'text', error, hint, ...props }) {
+  const [showPassword, setShowPassword] = useState(false)
+  const isPassword = type === 'password'
+  const inputType = isPassword ? (showPassword ? 'text' : 'password') : type
+
+  return (
+    <div style={styles.fieldWrap}>
+      {label && <label style={styles.label}>{label}</label>}
+      <div style={styles.inputWrap}>
+        <input
+          type={inputType}
+          style={{
+            ...styles.input,
+            borderColor: error ? 'var(--accent-danger)' : undefined,
+            paddingRight: isPassword ? '48px' : undefined
+          }}
+          onFocus={e => e.target.style.borderColor = 'var(--border-focus)'}
+          onBlur={e => e.target.style.borderColor = error ? 'var(--accent-danger)' : 'var(--border)'}
+          autoCapitalize={type === 'email' || type === 'password' ? 'none' : undefined}
+          autoCorrect="off"
+          spellCheck={false}
+          {...props}
+        />
+        {isPassword && (
+          <button
+            type="button"
+            style={styles.eyeBtn}
+            onClick={() => setShowPassword(v => !v)}
+            aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        )}
+      </div>
+      {error && (
+        <span style={styles.fieldError}>
+          <AlertCircle size={12} /> {error}
+        </span>
+      )}
+      {hint && !error && (
+        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{hint}</span>
+      )}
+    </div>
+  )
+}
+
+export function Button({ children, variant = 'primary', loading, fullWidth, ...props }) {
+  const base = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    padding: '14px 24px',
+    borderRadius: 'var(--radius-sm)',
+    fontSize: '15px',
+    fontWeight: '500',
+    fontFamily: 'var(--font-body)',
+    transition: 'opacity 0.15s, transform 0.1s',
+    width: fullWidth ? '100%' : undefined,
+    cursor: props.disabled || loading ? 'not-allowed' : 'pointer',
+    opacity: props.disabled || loading ? 0.6 : 1
+  }
+
+  const variants = {
+    primary: {
+      background: 'var(--accent-primary)',
+      color: '#fff',
+      border: 'none'
+    },
+    ghost: {
+      background: 'transparent',
+      color: 'var(--text-secondary)',
+      border: '1px solid var(--border)'
+    },
+    danger: {
+      background: 'transparent',
+      color: 'var(--accent-danger)',
+      border: '1px solid var(--accent-danger)'
+    }
+  }
+
+  return (
+    <button
+      style={{ ...base, ...variants[variant] }}
+      onMouseEnter={e => { if (!props.disabled && !loading) e.target.style.opacity = '0.85' }}
+      onMouseLeave={e => { if (!props.disabled && !loading) e.target.style.opacity = '1' }}
+      onMouseDown={e => { if (!props.disabled && !loading) e.currentTarget.style.transform = 'scale(0.98)' }}
+      onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
+      disabled={props.disabled || loading}
+      {...props}
+    >
+      {loading && <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />}
+      {children}
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </button>
+  )
+}
+
+export function Alert({ type = 'error', children }) {
+  const colors = {
+    error: { bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.3)', color: '#fca5a5' },
+    success: { bg: 'rgba(74,222,128,0.1)', border: 'rgba(74,222,128,0.3)', color: '#86efac' },
+    info: { bg: 'rgba(124,106,247,0.1)', border: 'rgba(124,106,247,0.3)', color: '#a5b4fc' }
+  }
+  const c = colors[type]
+
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: '10px',
+      padding: '12px 14px',
+      borderRadius: 'var(--radius-sm)',
+      background: c.bg,
+      border: `1px solid ${c.border}`,
+      color: c.color,
+      fontSize: '14px',
+      lineHeight: '1.5'
+    }}>
+      {type === 'error' && <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '1px' }} />}
+      {type === 'success' && <CheckCircle2 size={16} style={{ flexShrink: 0, marginTop: '1px' }} />}
+      {children}
+    </div>
+  )
+}
