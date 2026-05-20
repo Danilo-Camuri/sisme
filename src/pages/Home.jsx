@@ -98,7 +98,6 @@ export default function Home() {
           descricao="Abrir uma sessão"
           cor={personagem === 'tina' ? '#a78bfa' : '#34d399'}
           onClick={() => navigate('/conversa')}
-          em_breve
         />
         <MenuCard
           emoji="🎧"
