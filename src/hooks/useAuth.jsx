@@ -37,24 +37,37 @@ export function AuthProvider({ children }) {
     setLoading(false)
   }
 
-  async function cadastrar({ email, senha, codigoEscola, matricula, nome }) {
-    // 1. Valida se a matrícula existe e está disponível nessa escola
-    const { data: escola } = await supabase
+  // Chamada no step 0 do cadastro — valida escola e matrícula antes de avançar
+  async function validarEscolaMatricula({ codigoEscola, matricula }) {
+    // Busca escola pelo código
+    const { data: escola, error: errEscola } = await supabase
       .from('escolas')
-      .select('id')
+      .select('id, nome')
       .eq('codigo', codigoEscola.toUpperCase().trim())
-      .single()
+      .eq('ativo', true)
+      .maybeSingle()
+
+    if (errEscola) {
+      console.error('Erro ao buscar escola:', errEscola)
+      return { error: 'Erro de conexão. Verifique sua internet e tente novamente.' }
+    }
 
     if (!escola) {
       return { error: 'Código de escola inválido. Verifique com sua escola.' }
     }
 
-    const { data: alunoExistente } = await supabase
+    // Busca matrícula nessa escola
+    const { data: alunoExistente, error: errAluno } = await supabase
       .from('alunos')
       .select('id, usuario_id')
       .eq('matricula', matricula.trim())
       .eq('escola_id', escola.id)
-      .single()
+      .maybeSingle()
+
+    if (errAluno) {
+      console.error('Erro ao buscar matrícula:', errAluno)
+      return { error: 'Erro de conexão. Verifique sua internet e tente novamente.' }
+    }
 
     if (!alunoExistente) {
       return { error: 'Matrícula não encontrada. Verifique o número ou fale com sua escola.' }
@@ -64,12 +77,17 @@ export function AuthProvider({ children }) {
       return { error: 'Esta matrícula já possui uma conta cadastrada.' }
     }
 
-    // 2. Cria conta no Supabase Auth
+    return { success: true, escolaId: escola.id, alunoId: alunoExistente.id }
+  }
+
+  // Chamada no step final — cria a conta e vincula à matrícula
+  async function cadastrar({ email, senha, nome, escolaId, alunoId }) {
+    // Cria conta no Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password: senha,
       options: {
-        data: { nome, escola_id: escola.id, matricula }
+        data: { nome }
       }
     })
 
@@ -80,18 +98,17 @@ export function AuthProvider({ children }) {
       return { error: 'Erro ao criar conta. Tente novamente.' }
     }
 
-    // 3. Vincula o usuário à matrícula
+    // Vincula o usuário à matrícula
     const { error: updateError } = await supabase
       .from('alunos')
       .update({
         usuario_id: authData.user.id,
         nome: nome.trim()
       })
-      .eq('id', alunoExistente.id)
+      .eq('id', alunoId)
 
     if (updateError) {
-      // Rollback: remove o usuário criado
-      await supabase.auth.admin.deleteUser(authData.user.id)
+      console.error('Erro ao vincular matrícula:', updateError)
       return { error: 'Erro ao vincular conta. Tente novamente.' }
     }
 
@@ -132,7 +149,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, aluno, loading, cadastrar, login, recuperarSenha, logout }}>
+    <AuthContext.Provider value={{ user, aluno, loading, validarEscolaMatricula, cadastrar, login, recuperarSenha, logout }}>
       {children}
     </AuthContext.Provider>
   )
