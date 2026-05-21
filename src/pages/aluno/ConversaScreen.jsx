@@ -81,7 +81,7 @@ export default function ConversaScreen({ onBack }) {
 
         const { data: alunoData, error: alunoError } = await supabase
           .from("alunos")
-          .select("id, nome, personagem")
+          .select("id, nome, personagem, escola_id")
           .eq("usuario_id", user.id)
           .single();
 
@@ -101,8 +101,14 @@ export default function ConversaScreen({ onBack }) {
 
         const resumos = conversasData
           ? conversasData
-              .filter((c) => c.resumo_temas?.resumo_narrativo)
-              .map((c) => c.resumo_temas.resumo_narrativo)
+              .filter((c) => c.resumo_temas)
+              .map((c) => {
+                try {
+                  const parsed = typeof c.resumo_temas === 'string' ? JSON.parse(c.resumo_temas) : c.resumo_temas;
+                  return parsed?.resumo_narrativo || null;
+                } catch { return null; }
+              })
+              .filter(Boolean)
           : [];
 
         setPreviousSummaries(resumos);
@@ -172,9 +178,10 @@ export default function ConversaScreen({ onBack }) {
       const { data: { user } } = await supabase.auth.getUser();
       await supabase.from("conversas").insert({
         aluno_id: aluno.id,
+        escola_id: aluno.escola_id,
         usuario_id: user.id,
         personagem,
-        resumo_temas: resumoTemas,
+        resumo_temas: typeof resumoTemas === 'string' ? resumoTemas : JSON.stringify(resumoTemas),
         nivel_crise_maximo: nivel,
         trocas_realizadas: trocas,
         criado_em: new Date().toISOString(),
@@ -184,11 +191,9 @@ export default function ConversaScreen({ onBack }) {
       if (nivel >= 2) {
         await supabase.from("alertas").insert({
           aluno_id: aluno.id,
-          nivel: nivel,
-          descricao: `Sessão com ${personagem === "tina" ? "Tina" : "Léo"} detectou sinais de crise Nível ${nivel}.`,
-          resumo: resumoTemas?.resumo_narrativo || "",
+          escola_id: aluno.escola_id,
+          nivel_alerta: nivel,
           criado_em: new Date().toISOString(),
-          lido: false,
         });
       }
     } catch (e) {
