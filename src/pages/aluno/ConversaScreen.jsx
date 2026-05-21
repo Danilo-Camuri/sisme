@@ -144,7 +144,7 @@ export default function ConversaScreen({ onBack }) {
         .filter((m) => m.role !== "system")
         .map((m) => ({ role: m.role, content: m.content }));
 
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("/.netlify/functions/anthropic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -240,7 +240,7 @@ export default function ConversaScreen({ onBack }) {
         finalSystemPrompt += "\n\nENCERRAMENTO: Esta é a última troca da sessão. Encerre a conversa de forma natural e acolhedora usando uma das suas falas de encerramento de sessão adequada ao tom da conversa.";
       }
 
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("/.netlify/functions/anthropic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
