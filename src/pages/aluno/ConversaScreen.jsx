@@ -174,6 +174,17 @@ export default function ConversaScreen({ onBack }) {
         resumoTemas = { resumo_narrativo: rawText.slice(0, 500), nivel_crise_detectado: nivel };
       }
 
+      // Garantir que resumo_narrativo nunca fique vazio
+      if (!resumoTemas?.resumo_narrativo) {
+        resumoTemas = {
+          ...resumoTemas,
+          resumo_narrativo: conversaParaResumo.length <= 2
+            ? "Sessão muito curta para gerar resumo."
+            : "Sessão encerrada sem resumo gerado.",
+          nivel_crise_detectado: nivel,
+        };
+      }
+
       // Salvar APENAS o resumo — sem transcrição bruta
       const { data: { user } } = await supabase.auth.getUser();
       await supabase.from("conversas").insert({
