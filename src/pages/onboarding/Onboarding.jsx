@@ -6,9 +6,9 @@ import { useAuth } from '../../hooks/useAuth'
 // ─── Constantes ────────────────────────────────────────────────
 const TOTAL_TELAS = 6
 const CARDS_CARROSSEL = [
-  { emoji: '💬', titulo: 'alguém pra ouvir',     sub: 'desabafa, processa, organiza o que tá sentindo — sem julgamento, 24h por dia' },
+  { emoji: '💬', titulo: 'alguém pra ouvir',     sub: 'desabafa, processa, organiza o que tá sentindo sem julgamento, 24h por dia' },
   { emoji: '📚', titulo: 'seus estudos, do seu jeito', sub: 'método de estudo, rotina por matéria, foco, procrastinação — a ARIA te ajuda a montar seu ritmo' },
-  { emoji: '🧭', titulo: 'seu futuro, agora',    sub: 'carreira, faculdade, o que você quer ser — dá pra pensar junto, sem pressão' },
+  { emoji: '🧭', titulo: 'seu futuro, agora',    sub: 'carreira, faculdade, o que você quer ser dá pra pensar junto, sem pressão' },
   { emoji: '🤝', titulo: 'pra tudo mais',        sub: 'família, amizades, crush, escola — a ARIA tá aqui pra qualquer coisa que pesar' },
 ]
 
