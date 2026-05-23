@@ -1,41 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
+/* global.css — ARIA v1.0 */
+
+/* 1. Design tokens da ARIA (cores, fontes, raios, transições) */
+@import './aria-tokens.css';
 
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-}
-
-:root {
-  --bg: #0f0f1a;
-  --bg-card: #1a1a2e;
-  --bg-elevated: #22223b;
-  --bg-input: #2a2a40;
-
-  --accent-primary: #7c6af7;
-  --accent-secondary: #5eead4;
-  --accent-warm: #fb923c;
-  --accent-danger: #f87171;
-  --accent-success: #4ade80;
-
-  --text-primary: #f0effe;
-  --text-secondary: #a09ab8;
-  --text-muted: #635d7a;
-
-  --border: rgba(255,255,255,0.06);
-  --border-focus: rgba(124,106,247,0.5);
-
-  --radius-sm: 10px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
-  --radius-xl: 32px;
-
-  --font-display: 'Sora', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
-
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
-  --shadow-md: 0 8px 32px rgba(0,0,0,0.4);
-  --shadow-glow: 0 0 40px rgba(124,106,247,0.15);
 }
 
 html {
@@ -46,11 +17,12 @@ html {
 body {
   font-family: var(--font-body);
   background-color: var(--bg);
-  color: var(--text-primary);
+  color: var(--text);
   line-height: 1.6;
   min-height: 100dvh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
@@ -78,24 +50,26 @@ input, textarea, select {
 }
 
 a {
-  color: var(--accent-primary);
+  color: var(--accent-purple);
   text-decoration: none;
 }
-/* Corrige o fundo branco do autocomplete do Chrome/Safari */
+
+/* Autocomplete escuro (Chrome/Safari) */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 999px var(--bg-input) inset !important;
-  -webkit-text-fill-color: var(--text-primary) !important;
-  caret-color: var(--text-primary);
+  -webkit-box-shadow: 0 0 0 999px var(--surface) inset !important;
+  -webkit-text-fill-color: var(--text) !important;
+  caret-color: var(--text);
   transition: background-color 9999s ease-in-out 0s;
 }
-/* Scrollbar */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 2px; }
 
-/* Safe area for mobile notch/home indicator */
-.safe-top { padding-top: env(safe-area-inset-top); }
+/* Scrollbar */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 2px; opacity: 0.4; }
+
+/* Safe area mobile */
+.safe-top    { padding-top: env(safe-area-inset-top); }
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
