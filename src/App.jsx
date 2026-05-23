@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
+import { useAutoTheme } from './hooks/useAutoTheme'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import Login from './components/auth/Login'
 import Cadastro from './components/auth/Cadastro'
@@ -14,27 +15,35 @@ function AlunoRoute({ children }) {
   return children
 }
 
+function AppWithTheme() {
+  useAutoTheme()
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/cadastro" element={<Cadastro />} />
+        <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+        <Route path="/nova-senha" element={<NovaSenha />} />
+        <Route
+          path="/onboarding"
+          element={<ProtectedRoute><Onboarding /></ProtectedRoute>}
+        />
+        <Route
+          path="/home"
+          element={<ProtectedRoute><AlunoRoute><AriaChat /></AlunoRoute></ProtectedRoute>}
+        />
+        <Route path="/" element={<Navigate to="/home" replace />} />
+        <Route path="*" element={<Navigate to="/home" replace />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
+
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/cadastro" element={<Cadastro />} />
-          <Route path="/recuperar-senha" element={<RecuperarSenha />} />
-          <Route path="/nova-senha" element={<NovaSenha />} />
-          <Route
-            path="/onboarding"
-            element={<ProtectedRoute><Onboarding /></ProtectedRoute>}
-          />
-          <Route
-            path="/home"
-            element={<ProtectedRoute><AlunoRoute><AriaChat /></AlunoRoute></ProtectedRoute>}
-          />
-          <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="*" element={<Navigate to="/home" replace />} />
-        </Routes>
-      </BrowserRouter>
+      <AppWithTheme />
     </AuthProvider>
   )
 }
