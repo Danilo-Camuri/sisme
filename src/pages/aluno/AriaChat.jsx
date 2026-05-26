@@ -9,15 +9,15 @@ import {
 } from "./systemPrompts";
 
 // ─── Constantes ───────────────────────────────────────────────
-const MODEL     = "claude-haiku-4-5-20251001";
+const MODEL      = "claude-haiku-4-5-20251001";
 const MAX_TOKENS = 600;
-const MAX_TROCAS = 30;
+const MAX_TROCAS = 15;   // BUG 2: resumo gerado a cada 15 trocas
 const MAX_HIST   = 3;
 
 // ─── Helpers ──────────────────────────────────────────────────
 function fmtData(iso) {
   if (!iso) return "";
-  const d = new Date(iso);
+  const d    = new Date(iso);
   const hoje = new Date();
   const diff = Math.floor((hoje - d) / 86400000);
   if (diff === 0) return "hoje";
@@ -28,16 +28,39 @@ function fmtData(iso) {
 
 function tituloSessao(resumo) {
   if (!resumo) return "sessão sem título";
-  const s = typeof resumo === "string" ? resumo : resumo.resumo_narrativo || "";
-  const words = s.trim().split(/\s+/).slice(0, 5).join(" ");
+  const s     = typeof resumo === "string" ? resumo : "";
+  const words = s.trim().split(/\s+/).slice(0, 6).join(" ");
   return words.length > 0 ? words.toLowerCase() : "sessão";
 }
 
-// ─── Componente ───────────────────────────────────────────────
+// ─── BUG 1: chave de persistência local por aluno ─────────────
+function getStorageKey(alunoId) { return `aria_msgs_${alunoId}`; }
+
+function saveLocal(alunoId, msgs, trocas, crisisLevel) {
+  try {
+    sessionStorage.setItem(getStorageKey(alunoId), JSON.stringify({ msgs, trocas, crisisLevel, ts: Date.now() }));
+  } catch {}
+}
+
+function loadLocal(alunoId) {
+  try {
+    const raw = sessionStorage.getItem(getStorageKey(alunoId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    // expirar após 2 horas
+    if (Date.now() - parsed.ts > 2 * 60 * 60 * 1000) { sessionStorage.removeItem(getStorageKey(alunoId)); return null; }
+    return parsed;
+  } catch { return null; }
+}
+
+function clearLocal(alunoId) {
+  try { sessionStorage.removeItem(getStorageKey(alunoId)); } catch {}
+}
+
+// ─── Componente principal ─────────────────────────────────────
 export default function AriaChat() {
   const { aluno, logout } = useAuth();
 
-  // estado da conversa
   const [messages,      setMessages]      = useState([]);
   const [input,         setInput]         = useState("");
   const [loading,       setLoading]       = useState(false);
@@ -48,26 +71,22 @@ export default function AriaChat() {
   const [savingSession, setSavingSession] = useState(false);
   const [error,         setError]         = useState(null);
 
-  // histórico e prompt
   const [historico,    setHistorico]    = useState([]);
   const [systemPrompt, setSystemPrompt] = useState("");
 
-  // sidebar
-  const [sidebarOpen, setSidebarOpen]   = useState(false);
-  const [allSessions, setAllSessions]   = useState([]);
+  // BUG 3: sidebar com estado explícito e handler dedicado
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [allSessions, setAllSessions] = useState([]);
 
-  // card de humor
   const [humorOpen,    setHumorOpen]    = useState(false);
   const [humorValor,   setHumorValue]   = useState(null);
   const [energiaValor, setEnergiaValue] = useState(null);
   const [humorSalvo,   setHumorSalvo]   = useState(false);
 
-  // refs
-  const bottomRef      = useRef(null);
-  const textareaRef    = useRef(null);
-  const crisisRef      = useRef(0);
-  const sidebarRef     = useRef(null);
-  const touchStartX    = useRef(null);
+  const bottomRef   = useRef(null);
+  const textareaRef = useRef(null);  // BUG 5: foco no input
+  const crisisRef   = useRef(0);
+  const touchStartX = useRef(null);
 
   const hora    = new Date().getHours();
   const apelido = aluno?.apelido || aluno?.nome?.split(" ")[0] || "você";
@@ -81,22 +100,21 @@ export default function AriaChat() {
   useEffect(() => {
     if (!textareaRef.current) return;
     textareaRef.current.style.height = "auto";
-    textareaRef.current.style.height =
-      Math.min(textareaRef.current.scrollHeight, 120) + "px";
+    textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + "px";
   }, [input]);
 
-  // ── Swipe para fechar sidebar (mobile) ─────────────────────
+  // ── BUG 3: swipe corrigido — não conflita com sidebar ─────
   useEffect(() => {
     function onTouchStart(e) { touchStartX.current = e.touches[0].clientX; }
     function onTouchEnd(e) {
       if (touchStartX.current === null) return;
       const dx = touchStartX.current - e.changedTouches[0].clientX;
-      if (dx > 60) setSidebarOpen(false);   // swipe left = fecha
-      if (dx < -60) setSidebarOpen(true);   // swipe right = abre
+      if (dx > 70)  setSidebarOpen(false);
+      if (dx < -70 && touchStartX.current < 40) setSidebarOpen(true); // só da borda esquerda
       touchStartX.current = null;
     }
-    document.addEventListener("touchstart", onTouchStart);
-    document.addEventListener("touchend",   onTouchEnd);
+    document.addEventListener("touchstart", onTouchStart, { passive: true });
+    document.addEventListener("touchend",   onTouchEnd,   { passive: true });
     return () => {
       document.removeEventListener("touchstart", onTouchStart);
       document.removeEventListener("touchend",   onTouchEnd);
@@ -108,7 +126,9 @@ export default function AriaChat() {
     if (!aluno) return;
     async function init() {
       try {
-        // buscar todas as sessões para a sidebar
+        // BUG 1: tentar restaurar sessão do sessionStorage
+        const cached = loadLocal(aluno.id);
+
         const { data: todas } = await supabase
           .from("conversas")
           .select("id, resumo_temas, resumo_sessao, construto_cortex, ponto_retomada, criado_em")
@@ -118,17 +138,13 @@ export default function AriaChat() {
 
         setAllSessions(todas || []);
 
-        // últimas 3 com resumo para contexto
-        const comResumo = (todas || [])
-          .filter(c => c.resumo_sessao)
-          .slice(0, MAX_HIST);
+        const comResumo = (todas || []).filter(c => c.resumo_sessao).slice(0, MAX_HIST);
         setHistorico(comResumo);
 
         const sp = getARIASystemPrompt(apelido, comResumo);
         setSystemPrompt(sp);
 
-        // verificar check-in de hoje
-        const hoje = new Date(); hoje.setHours(0,0,0,0);
+        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
         const { data: ci } = await supabase
           .from("checkins")
           .select("humor, energia")
@@ -137,10 +153,17 @@ export default function AriaChat() {
           .maybeSingle();
         if (ci) { setHumorValue(ci.humor); setEnergiaValue(ci.energia); setHumorSalvo(true); }
 
-        // mensagem de abertura da ARIA
-        const abertura = getAberturaARIA(apelido, hora, comResumo);
-        setMessages([{ role: "assistant", content: abertura }]);
-      } catch (e) {
+        // BUG 1: restaurar mensagens se existirem no cache
+        if (cached && cached.msgs && cached.msgs.length > 0) {
+          setMessages(cached.msgs);
+          setTrocas(cached.trocas || 0);
+          crisisRef.current = cached.crisisLevel || 0;
+          setCrisisLevel(cached.crisisLevel || 0);
+        } else {
+          const abertura = getAberturaARIA(apelido, hora, comResumo);
+          setMessages([{ role: "assistant", content: abertura }]);
+        }
+      } catch {
         setError("Erro ao iniciar. Recarregue a página.");
       } finally {
         setInitializing(false);
@@ -149,22 +172,20 @@ export default function AriaChat() {
     init();
   }, [aluno]);
 
-  // ── Salvar humor no Supabase ───────────────────────────────
+  // ── Salvar humor ──────────────────────────────────────────
   async function salvarHumor() {
     if (!humorValor || !energiaValor || humorSalvo) return;
     try {
       await supabase.from("checkins").insert({
-        aluno_id:  aluno.id,
-        escola_id: aluno.escola_id,
-        humor:     humorValor,
-        energia:   energiaValor,
+        aluno_id: aluno.id, escola_id: aluno.escola_id,
+        humor: humorValor, energia: energiaValor,
       });
       setHumorSalvo(true);
       setHumorOpen(false);
     } catch (e) { console.error("checkin:", e); }
   }
 
-  // ── Salvar resumo da sessão ────────────────────────────────
+  // ── BUG 2: saveSession com geração real de resumo ─────────
   const saveSession = useCallback(async (finalMessages, nivelFinal) => {
     if (!aluno || finalMessages.length < 2) return;
     setSavingSession(true);
@@ -177,46 +198,64 @@ export default function AriaChat() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: MODEL, max_tokens: 400,
+          model: MODEL, max_tokens: 500,
           system: getSummaryPrompt(),
           messages: apiMessages,
         }),
       });
-      const data   = await res.json();
-      const rawText = data.content?.map(b => b.text || "").join("") || "";
+
+      const data    = await res.json();
+      const rawText = data.content?.map(b => b.text || "").join("").trim() || "";
+      console.log("[ARIA resumo] raw:", rawText);
 
       let resumo = null;
-      try   { resumo = JSON.parse(rawText.replace(/```json|```/g, "").trim()); }
-      catch { resumo = { resumo_sessao: rawText.slice(0, 600) || "Sessão encerrada.", nivel_crise: nivelFinal }; }
-      if (!resumo?.resumo_sessao) resumo = { ...resumo, resumo_sessao: "Sessão muito curta.", nivel_crise: nivelFinal };
+      try {
+        const clean = rawText.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+        resumo = JSON.parse(clean);
+      } catch {
+        // se não parsear, usa o texto como resumo_sessao
+        resumo = {
+          resumo_sessao:    rawText.slice(0, 600) || "Sessão encerrada.",
+          construto_cortex: null,
+          ponto_retomada:   null,
+          nivel_crise:      nivelFinal,
+        };
+      }
+
+      if (!resumo?.resumo_sessao || resumo.resumo_sessao.trim() === "") {
+        resumo.resumo_sessao = finalMessages.length <= 3
+          ? "Sessão muito curta para resumo."
+          : "Sessão encerrada.";
+      }
 
       const { data: { user } } = await supabase.auth.getUser();
       await supabase.from("conversas").insert({
-        aluno_id:          aluno.id,
-        escola_id:         aluno.escola_id,
-        usuario_id:        user.id,
-        assistente:        "aria",
-        resumo_temas:      resumo.resumo_sessao,
-        resumo_sessao:     resumo.resumo_sessao,
-        construto_cortex:  resumo.construto_cortex || null,
-        ponto_retomada:    resumo.ponto_retomada   || null,
+        aluno_id:           aluno.id,
+        escola_id:          aluno.escola_id,
+        usuario_id:         user.id,
+        assistente:         "aria",
+        resumo_temas:       resumo.resumo_sessao,
+        resumo_sessao:      resumo.resumo_sessao,
+        construto_cortex:   resumo.construto_cortex  || null,
+        ponto_retomada:     resumo.ponto_retomada    || null,
         nivel_crise_maximo: nivelFinal,
-        nivel_alerta:      nivelFinal,
-        trocas_realizadas: trocas,
-        criado_em:         new Date().toISOString(),
+        nivel_alerta:       nivelFinal,
+        trocas_realizadas:  finalMessages.filter(m => m.role === "user").length,
+        criado_em:          new Date().toISOString(),
       });
 
       if (nivelFinal >= 2) {
         await supabase.from("alertas").insert({
-          aluno_id:    aluno.id,
-          escola_id:   aluno.escola_id,
-          nivel_alerta: nivelFinal,
-          criado_em:   new Date().toISOString(),
+          aluno_id: aluno.id, escola_id: aluno.escola_id,
+          nivel_alerta: nivelFinal, criado_em: new Date().toISOString(),
         });
       }
+
+      // BUG 1: limpar cache local após salvar no Supabase
+      clearLocal(aluno.id);
     } catch (e) { console.error("[ARIA] saveSession:", e); }
     finally     { setSavingSession(false); }
-  }, [aluno, trocas]);
+  }, [aluno]);
 
   // ── Enviar mensagem ────────────────────────────────────────
   async function sendMessage() {
@@ -224,8 +263,11 @@ export default function AriaChat() {
     const userText = input.trim();
     setInput("");
 
-    const msgCrisis  = detectCrisisLevel(userText);
-    const newCrisis  = Math.max(crisisRef.current, msgCrisis);
+    // BUG 5: devolver foco ao input imediatamente
+    setTimeout(() => textareaRef.current?.focus(), 50);
+
+    const msgCrisis   = detectCrisisLevel(userText);
+    const newCrisis   = Math.max(crisisRef.current, msgCrisis);
     crisisRef.current = newCrisis;
     setCrisisLevel(newCrisis);
 
@@ -235,16 +277,19 @@ export default function AriaChat() {
     const newTrocas = trocas + 1;
     setTrocas(newTrocas);
 
+    // BUG 1: salvar no sessionStorage após cada mensagem
+    saveLocal(aluno.id, newMessages, newTrocas, newCrisis);
+
     try {
       const apiMessages = newMessages
         .filter(m => m.role !== "system")
         .map(m => ({ role: m.role, content: m.content }));
 
       let sp = systemPrompt;
-      if (newCrisis === 3) sp += "\n\nATENÇÃO NÍVEL 3: use a fala exata do protocolo de crise Nível 3. Após isso, encerre com cuidado.";
-      else if (newCrisis === 2) sp += "\n\nATENÇÃO NÍVEL 2: valide intensamente e ofereça CVV 188 e orientador escolar.";
-      else if (newCrisis === 1) sp += "\n\nATENÇÃO NÍVEL 1: desacelere, aprofunde escuta.";
-      if (newTrocas >= MAX_TROCAS) sp += "\n\nENCERRAMENTO: última mensagem. Encerre de forma natural e acolhedora.";
+      if (newCrisis === 3)       sp += "\n\nATENÇÃO NÍVEL 3: use a fala exata do protocolo de crise Nível 3. Após isso, encerre com cuidado.";
+      else if (newCrisis === 2)  sp += "\n\nATENÇÃO NÍVEL 2: valide intensamente e ofereça CVV 188 e orientador escolar.";
+      else if (newCrisis === 1)  sp += "\n\nATENÇÃO NÍVEL 1: desacelere, aprofunde escuta.";
+      if (newTrocas >= MAX_TROCAS) sp += "\n\nENCERRAMENTO: esta é a última mensagem da sessão. Encerre de forma natural e acolhedora com a fala de encerramento.";
 
       const res = await fetch("/.netlify/functions/anthropic", {
         method: "POST",
@@ -256,24 +301,43 @@ export default function AriaChat() {
       const data = await res.json();
       const text = data.content?.map(b => b.text || "").join("") || "";
 
-      const resCrisis  = detectCrisisLevel(text);
+      const resCrisis   = detectCrisisLevel(text);
       const finalCrisis = Math.max(newCrisis, resCrisis);
       if (finalCrisis > newCrisis) { crisisRef.current = finalCrisis; setCrisisLevel(finalCrisis); }
 
       const updated = [...newMessages, { role: "assistant", content: text }];
       setMessages(updated);
 
+      // BUG 1: salvar no sessionStorage após resposta da ARIA
+      saveLocal(aluno.id, updated, newTrocas, finalCrisis);
+
+      // BUG 2: encerrar e gerar resumo a cada 15 trocas ou crise 3
       if (newTrocas >= MAX_TROCAS || finalCrisis === 3) {
         setSessionEnded(true);
         await saveSession(updated, finalCrisis);
       }
     } catch {
       setMessages(prev => [...prev, { role: "assistant", content: "deu um problema técnico aqui. pode repetir?" }]);
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+      // BUG 5: devolver foco após resposta
+      setTimeout(() => textareaRef.current?.focus(), 100);
+    }
   }
 
   function handleKeyDown(e) {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  // BUG 3: handler do menu com toggle explícito
+  function toggleSidebar() {
+    setSidebarOpen(prev => !prev);
+  }
+
+  async function encerrarSessao() {
+    if (messages.length < 2 || savingSession) return;
+    setSessionEnded(true);
+    await saveSession(messages, crisisRef.current);
   }
 
   async function novaConversa() {
@@ -282,12 +346,13 @@ export default function AriaChat() {
       setSessionEnded(true);
       await saveSession(messages, crisisRef.current);
     }
+    clearLocal(aluno?.id);
     setMessages([]);
     setTrocas(0);
     setSessionEnded(false);
     setCrisisLevel(0);
     crisisRef.current = 0;
-    // recarregar histórico e abertura
+
     const { data: todas } = await supabase
       .from("conversas")
       .select("id, resumo_temas, resumo_sessao, construto_cortex, ponto_retomada, criado_em")
@@ -303,7 +368,7 @@ export default function AriaChat() {
     setMessages([{ role: "assistant", content: abertura }]);
   }
 
-  // ── Loading inicial ────────────────────────────────────────
+  // ── Loading / erro ─────────────────────────────────────────
   if (initializing) return (
     <div style={s.loadScreen}>
       <ARIAOrb size={64} pulse />
@@ -314,7 +379,7 @@ export default function AriaChat() {
   if (error) return (
     <div style={s.loadScreen}>
       <p style={{ color: "var(--accent-pink)", fontSize: 14, fontFamily: "var(--font-body)" }}>{error}</p>
-      <button onClick={() => window.location.reload()} style={s.btnPrimary}>recarregar</button>
+      <button onClick={() => window.location.reload()} style={s.btnPill}>recarregar</button>
     </div>
   );
 
@@ -322,78 +387,76 @@ export default function AriaChat() {
   return (
     <div style={s.shell}>
 
-      {/* ══ SIDEBAR ══════════════════════════════════════════ */}
-      <>
-        {/* Overlay */}
-        {sidebarOpen && (
-          <div
-            onClick={() => setSidebarOpen(false)}
-            style={s.overlay}
-          />
-        )}
+      {/* BUG 3: overlay com z-index correto e pointer-events */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={s.overlay}
+          aria-label="fechar menu"
+        />
+      )}
 
-        <aside
-          ref={sidebarRef}
-          style={{ ...s.sidebar, transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)" }}
-        >
-          {/* Topo sidebar */}
-          <div style={s.sidebarTop}>
-            <div style={s.sidebarBrand}>
-              <ARIAOrb size={24} />
-              <span style={s.brandName}>ARIA</span>
-            </div>
-            <button onClick={novaConversa} style={s.btnNovaConversa} title="Nova conversa">
-              <IconEditar />
-            </button>
+      {/* ── Sidebar ────────────────────────────────────────── */}
+      <aside style={{
+        ...s.sidebar,
+        transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
+      }}>
+        <div style={s.sidebarTop}>
+          <div style={s.sidebarBrand}>
+            <ARIAOrb size={24} />
+            <span style={s.brandName}>ARIA</span>
           </div>
+          <button onClick={novaConversa} style={s.btnIcon} title="Nova conversa" aria-label="Nova conversa">
+            <IconEditar />
+          </button>
+        </div>
 
-          {/* Lista de sessões */}
-          <div style={s.sessionList}>
-            {allSessions.length === 0 ? (
-              <p style={s.sessionEmpty}>primeira sessão 🌱</p>
-            ) : (
-              allSessions.map((sess, i) => (
-                <div key={sess.id || i} style={s.sessionItem}>
-                  <div style={s.sessionHeader}>
-                    {sess.construto_cortex && (
-                      <span style={s.badge}>{sess.construto_cortex}</span>
-                    )}
-                    <span style={s.sessionDate}>{fmtData(sess.criado_em)}</span>
-                  </div>
-                  <p style={s.sessionTitle}>
-                    {tituloSessao(sess.resumo_sessao || sess.resumo_temas)}
-                  </p>
+        <div style={s.sessionList}>
+          {allSessions.length === 0 ? (
+            <p style={s.sessionEmpty}>primeira sessão 🌱</p>
+          ) : (
+            allSessions.map((sess, i) => (
+              <div key={sess.id || i} style={s.sessionItem}>
+                <div style={s.sessionHeader}>
+                  {sess.construto_cortex && <span style={s.badge}>{sess.construto_cortex}</span>}
+                  <span style={s.sessionDate}>{fmtData(sess.criado_em)}</span>
                 </div>
-              ))
-            )}
-          </div>
+                <p style={s.sessionTitle}>
+                  {tituloSessao(sess.resumo_sessao || sess.resumo_temas)}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
 
-          {/* Rodapé sidebar */}
-          <div style={s.sidebarFooter}>
-            <div style={s.alunoInfo}>
-              <div style={s.alunoAvatar}>
-                {apelido.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <p style={s.alunoNome}>{aluno?.nome || apelido}</p>
-                {aluno?.apelido && aluno.apelido !== aluno.nome && (
-                  <p style={s.alunoApelido}>{aluno.apelido}</p>
-                )}
-              </div>
+        <div style={s.sidebarFooter}>
+          <div style={s.alunoInfo}>
+            <div style={s.alunoAvatar}>{apelido.charAt(0).toUpperCase()}</div>
+            <div style={{ overflow: "hidden" }}>
+              <p style={s.alunoNome}>{aluno?.nome || apelido}</p>
+              {aluno?.apelido && aluno.apelido !== aluno.nome && (
+                <p style={s.alunoApelido}>{aluno.apelido}</p>
+              )}
             </div>
-            <button onClick={logout} style={s.btnLogout} title="Sair">
-              <IconSair />
-            </button>
           </div>
-        </aside>
-      </>
+          <button onClick={logout} style={s.btnIcon} title="Sair" aria-label="Sair">
+            <IconSair />
+          </button>
+        </div>
+      </aside>
 
-      {/* ══ ÁREA PRINCIPAL ═══════════════════════════════════ */}
+      {/* ── Área principal ─────────────────────────────────── */}
       <main style={s.main}>
 
-        {/* ── Header ── */}
+        {/* Header */}
         <header style={s.header}>
-          <button onClick={() => setSidebarOpen(v => !v)} style={s.btnMenu} aria-label="Menu">
+          {/* BUG 3: botão com área de toque grande e handler correto */}
+          <button
+            onClick={toggleSidebar}
+            style={s.btnMenu}
+            aria-label="Abrir menu"
+            aria-expanded={sidebarOpen}
+          >
             <IconMenu />
           </button>
 
@@ -411,56 +474,47 @@ export default function AriaChat() {
           <div style={s.headerRight}>
             {crisisLevel >= 2 && <span title={`atenção nível ${crisisLevel}`} style={{ fontSize: 18 }}>⚠️</span>}
             {!sessionEnded && messages.length > 2 && (
-              <button
-                onClick={async () => { setSessionEnded(true); await saveSession(messages, crisisRef.current); }}
-                style={s.btnEncerrar}
-              >
+              <button onClick={encerrarSessao} style={s.btnEncerrar}>
                 encerrar
               </button>
             )}
           </div>
         </header>
 
-        {/* ── Barra de progresso ── */}
+        {/* Barra de progresso */}
         <div style={s.progressTrack}>
           <div style={{
             ...s.progressFill,
             width: `${Math.min((trocas / MAX_TROCAS) * 100, 100)}%`,
-            background: trocas >= MAX_TROCAS - 5
+            background: trocas >= MAX_TROCAS - 3
               ? "var(--accent-pink)"
               : "linear-gradient(90deg, var(--accent-purple), var(--accent-pink))",
           }} />
         </div>
 
-        {/* ── Mensagens ── */}
+        {/* Mensagens */}
         <div style={s.messages}>
           {messages.map((msg, i) => (
             <MessageBubble key={i} msg={msg} isUser={msg.role === "user"} />
           ))}
 
-          {/* Typing indicator */}
           {loading && (
-            <div style={{ ...s.msgRow, justifyContent: "flex-start", animation: "fadeUp .2s ease" }}>
+            <div style={{ ...s.msgRow, justifyContent: "flex-start" }}>
               <div style={s.ariaAvatarSmall}><ARIAOrb size={22} /></div>
-              <div style={s.ariaBubble}>
-                <span style={{ ...s.dot, animationDelay: "0ms" }} />
-                <span style={{ ...s.dot, animationDelay: "200ms" }} />
-                <span style={{ ...s.dot, animationDelay: "400ms" }} />
+              <div style={{ ...s.ariaBubble, display: "flex", gap: 5, alignItems: "center" }}>
+                {[0, 200, 400].map(d => (
+                  <span key={d} style={{ ...s.dot, animationDelay: `${d}ms` }} />
+                ))}
               </div>
             </div>
           )}
 
-          {/* Sessão encerrada */}
           {sessionEnded && !savingSession && (
             <div style={s.endCard}>
               <span style={{ fontSize: 28 }}>💜</span>
               <p style={s.endTitle}>sessão encerrada</p>
-              <p style={s.endSub}>
-                vou guardar tudo isso aqui. quando você voltar, começo de onde a gente parou.
-              </p>
-              <button onClick={novaConversa} style={s.btnPrimary}>
-                nova conversa
-              </button>
+              <p style={s.endSub}>vou guardar tudo isso aqui. quando você voltar, começo de onde a gente parou.</p>
+              <button onClick={novaConversa} style={s.btnPill}>nova conversa</button>
             </div>
           )}
 
@@ -471,54 +525,32 @@ export default function AriaChat() {
           <div ref={bottomRef} />
         </div>
 
-        {/* ── Card de humor (colapsável, acima do input) ── */}
+        {/* Card de humor colapsável */}
         {!humorSalvo && (
           <div style={s.humorCard}>
-            <button
-              onClick={() => setHumorOpen(v => !v)}
-              style={s.humorToggle}
-            >
-              <span style={s.humorToggleText}>
-                {humorOpen ? "fechar" : "✦ como você tá hoje?"}
-              </span>
-              <span style={{ fontSize: 12, color: "var(--muted)", transition: "transform .3s", transform: humorOpen ? "rotate(180deg)" : "rotate(0deg)" }}>▼</span>
+            <button onClick={() => setHumorOpen(v => !v)} style={s.humorToggle}>
+              <span style={s.humorToggleText}>{humorOpen ? "fechar" : "✦ como você tá hoje?"}</span>
+              <span style={{ fontSize: 11, color: "var(--muted)", transition: "transform .3s", transform: humorOpen ? "rotate(180deg)" : "rotate(0)" }}>▼</span>
             </button>
-
             {humorOpen && (
               <div style={s.humorBody}>
                 <div style={s.humorSection}>
                   <p style={s.humorLabel}>humor</p>
                   <div style={s.humorOptions}>
-                    {[["😶","1"],["😔","2"],["😐","3"],["🙂","4"],["😄","5"]].map(([emoji, val]) => (
-                      <button
-                        key={val}
-                        onClick={() => setHumorValue(Number(val))}
-                        style={{ ...s.humorOpt, background: humorValor === Number(val) ? "rgba(200,166,255,0.2)" : "transparent", border: humorValor === Number(val) ? "1px solid var(--accent-purple)" : "1px solid transparent" }}
-                      >
-                        {emoji}
-                      </button>
+                    {[["😶","1"],["😔","2"],["😐","3"],["🙂","4"],["😄","5"]].map(([e, v]) => (
+                      <button key={v} onClick={() => setHumorValue(Number(v))} style={{ ...s.humorOpt, background: humorValor === Number(v) ? "rgba(200,166,255,0.2)" : "transparent", border: humorValor === Number(v) ? "1px solid var(--accent-purple)" : "1px solid transparent" }}>{e}</button>
                     ))}
                   </div>
                 </div>
                 <div style={s.humorSection}>
                   <p style={s.humorLabel}>energia</p>
                   <div style={s.humorOptions}>
-                    {[["🪫","1"],["😴","2"],["😑","3"],["⚡","4"],["🔥","5"]].map(([emoji, val]) => (
-                      <button
-                        key={val}
-                        onClick={() => setEnergiaValue(Number(val))}
-                        style={{ ...s.humorOpt, background: energiaValor === Number(val) ? "rgba(200,166,255,0.2)" : "transparent", border: energiaValor === Number(val) ? "1px solid var(--accent-purple)" : "1px solid transparent" }}
-                      >
-                        {emoji}
-                      </button>
+                    {[["🪫","1"],["😴","2"],["😑","3"],["⚡","4"],["🔥","5"]].map(([e, v]) => (
+                      <button key={v} onClick={() => setEnergiaValue(Number(v))} style={{ ...s.humorOpt, background: energiaValor === Number(v) ? "rgba(200,166,255,0.2)" : "transparent", border: energiaValor === Number(v) ? "1px solid var(--accent-purple)" : "1px solid transparent" }}>{e}</button>
                     ))}
                   </div>
                 </div>
-                <button
-                  onClick={salvarHumor}
-                  disabled={!humorValor || !energiaValor}
-                  style={{ ...s.btnPrimary, width: "100%", opacity: (!humorValor || !energiaValor) ? 0.4 : 1 }}
-                >
+                <button onClick={salvarHumor} disabled={!humorValor || !energiaValor} style={{ ...s.btnPill, width: "100%", opacity: (!humorValor || !energiaValor) ? 0.4 : 1 }}>
                   registrar
                 </button>
               </div>
@@ -526,10 +558,13 @@ export default function AriaChat() {
           </div>
         )}
 
-        {/* ── Input ── */}
+        {/* Input */}
         {!sessionEnded && (
           <div style={s.inputArea}>
-            <div style={s.inputWrapper}>
+            <div style={{
+              ...s.inputWrapper,
+              borderColor: input.trim() ? "var(--accent-purple)" : "rgba(200,166,255,0.15)",
+            }}>
               <textarea
                 ref={textareaRef}
                 value={input}
@@ -548,7 +583,7 @@ export default function AriaChat() {
                   ...s.btnSend,
                   background: input.trim() && !loading
                     ? "linear-gradient(135deg, var(--accent-purple), var(--accent-pink))"
-                    : "rgba(138,135,160,0.15)",
+                    : "rgba(138,135,160,0.12)",
                   cursor: input.trim() && !loading ? "pointer" : "default",
                 }}
                 aria-label="enviar"
@@ -565,21 +600,24 @@ export default function AriaChat() {
         @keyframes fadeUp  { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
         @keyframes blink   { 0%,80%,100% { opacity:.2; transform:scale(.8) } 40% { opacity:1; transform:scale(1) } }
         @keyframes pulse   { 0%,100% { opacity:.6 } 50% { opacity:1 } }
-        @keyframes orbGlow { 0%,100% { box-shadow: 0 0 12px rgba(200,166,255,.4) } 50% { box-shadow: 0 0 24px rgba(255,159,203,.5) } }
+        @keyframes orbGlow { 0%,100% { box-shadow:0 0 12px rgba(200,166,255,.4) } 50% { box-shadow:0 0 24px rgba(255,159,203,.5) } }
         textarea::placeholder { color: var(--muted); }
         textarea:focus        { outline: none; }
         ::-webkit-scrollbar   { width: 3px; }
-        ::-webkit-scrollbar-thumb { background: rgba(138,135,160,.3); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: rgba(138,135,160,.25); border-radius: 2px; }
       `}</style>
     </div>
   );
 }
 
 // ─── Sub-componentes ──────────────────────────────────────────
-
 function MessageBubble({ msg, isUser }) {
   return (
-    <div style={{ ...s.msgRow, justifyContent: isUser ? "flex-end" : "flex-start", animation: "fadeUp .25s ease" }}>
+    <div style={{
+      ...s.msgRow,
+      justifyContent: isUser ? "flex-end" : "flex-start",
+      animation: "fadeUp .25s ease",
+    }}>
       {!isUser && <div style={s.ariaAvatarSmall}><ARIAOrb size={22} /></div>}
       <div style={isUser ? s.userBubble : s.ariaBubble}>
         <p style={s.bubbleText}>{msg.content}</p>
@@ -591,15 +629,14 @@ function MessageBubble({ msg, isUser }) {
 function ARIAOrb({ size = 36, pulse = false }) {
   return (
     <div style={{
-      width: size, height: size,
-      borderRadius: "50%",
+      width: size, height: size, borderRadius: "50%",
       background: "linear-gradient(135deg, var(--accent-purple), var(--accent-pink))",
       display: "flex", alignItems: "center", justifyContent: "center",
       flexShrink: 0,
       animation: pulse ? "orbGlow 2s ease-in-out infinite" : "none",
     }}>
-      <svg width={size * 0.5} height={size * 0.5} viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.8)" strokeWidth="1.5" />
+      <svg width={size * .5} height={size * .5} viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,.85)" strokeWidth="1.5" />
         <path d="M8 14s1-2 4-2 4 2 4 2" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
         <circle cx="9"  cy="10" r="1.2" fill="white" />
         <circle cx="15" cy="10" r="1.2" fill="white" />
@@ -610,7 +647,7 @@ function ARIAOrb({ size = 36, pulse = false }) {
 
 function IconMenu() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
       <line x1="3" y1="6"  x2="21" y2="6"  />
       <line x1="3" y1="12" x2="21" y2="12" />
       <line x1="3" y1="18" x2="21" y2="18" />
@@ -620,7 +657,7 @@ function IconMenu() {
 
 function IconEditar() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
     </svg>
@@ -629,7 +666,7 @@ function IconEditar() {
 
 function IconSair() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" strokeLinecap="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       <polyline points="16 17 21 12 16 7" />
       <line x1="21" y1="12" x2="9" y2="12" />
@@ -648,18 +685,11 @@ function IconSend({ active }) {
 
 // ─── Estilos ──────────────────────────────────────────────────
 const s = {
-  // shell
   shell: {
-    display: "flex",
-    height: "100dvh",
-    overflow: "hidden",
-    background: "var(--bg)",
-    color: "var(--text)",
-    fontFamily: "var(--font-body)",
-    position: "relative",
+    display: "flex", height: "100dvh", overflow: "hidden",
+    background: "var(--bg)", color: "var(--text)",
+    fontFamily: "var(--font-body)", position: "relative",
   },
-
-  // loading
   loadScreen: {
     display: "flex", flexDirection: "column", alignItems: "center",
     justifyContent: "center", gap: 16,
@@ -667,23 +697,22 @@ const s = {
   },
   loadText: { color: "var(--muted)", fontSize: 13, fontFamily: "var(--font-body)" },
 
-  // overlay sidebar
+  // BUG 3: overlay com z-index alto e pointer-events corretos
   overlay: {
     position: "fixed", inset: 0,
-    background: "rgba(14,13,20,0.6)",
+    background: "rgba(14,13,20,0.55)",
     backdropFilter: "blur(2px)",
     zIndex: 19,
+    cursor: "pointer",
   },
-
-  // sidebar
   sidebar: {
     position: "fixed", left: 0, top: 0, bottom: 0,
     width: 272,
     background: "var(--surface)",
-    borderRight: "1px solid rgba(200,166,255,0.12)",
+    borderRight: "1px solid rgba(200,166,255,0.1)",
     display: "flex", flexDirection: "column",
     zIndex: 20,
-    transition: "transform 0.3s cubic-bezier(.4,0,.2,1)",
+    transition: "transform 0.28s cubic-bezier(.4,0,.2,1)",
     willChange: "transform",
   },
   sidebarTop: {
@@ -694,114 +723,83 @@ const s = {
   },
   sidebarBrand: { display: "flex", alignItems: "center", gap: 10 },
   brandName: {
-    fontFamily: "var(--font-display)",
-    fontSize: 18, fontWeight: 600,
-    color: "var(--accent-purple)",
-    letterSpacing: "0.04em",
+    fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600,
+    color: "var(--accent-purple)", letterSpacing: "0.04em",
   },
-  btnNovaConversa: {
-    background: "rgba(200,166,255,0.1)",
-    border: "1px solid rgba(200,166,255,0.2)",
-    borderRadius: 8, padding: "6px 8px",
-    cursor: "pointer", display: "flex",
-    alignItems: "center", justifyContent: "center",
-    transition: "background var(--transition)",
-  },
-
   sessionList: {
     flex: 1, overflowY: "auto",
     padding: "10px 8px",
-    display: "flex", flexDirection: "column", gap: 4,
+    display: "flex", flexDirection: "column", gap: 2,
   },
   sessionEmpty: {
     color: "var(--muted)", fontSize: 13,
     padding: "12px 8px", textAlign: "center",
-    fontFamily: "var(--font-body)",
   },
   sessionItem: {
-    padding: "10px 12px",
-    borderRadius: "var(--radius-sm)",
+    padding: "10px 12px", borderRadius: "var(--radius-sm)",
     cursor: "default",
-    transition: "background var(--transition)",
   },
-  sessionHeader: {
-    display: "flex", alignItems: "center",
-    gap: 6, marginBottom: 4,
-  },
+  sessionHeader: { display: "flex", alignItems: "center", gap: 6, marginBottom: 4 },
   badge: {
     fontSize: 10, fontWeight: 700,
     color: "var(--accent-purple)",
     background: "rgba(200,166,255,0.12)",
     borderRadius: 4, padding: "1px 6px",
     letterSpacing: "0.04em",
-    fontFamily: "var(--font-body)",
   },
-  sessionDate: {
-    fontSize: 11, color: "var(--muted)",
-    fontFamily: "var(--font-body)",
-  },
+  sessionDate: { fontSize: 11, color: "var(--muted)" },
   sessionTitle: {
-    fontSize: 13, color: "var(--text)",
-    fontFamily: "var(--font-body)",
-    lineHeight: 1.4, margin: 0,
+    fontSize: 13, color: "var(--text)", lineHeight: 1.4, margin: 0,
     overflow: "hidden", textOverflow: "ellipsis",
-    display: "-webkit-box",
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: "vertical",
+    display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
   },
-
   sidebarFooter: {
     padding: "12px 16px",
     paddingBottom: "calc(12px + env(safe-area-inset-bottom))",
     borderTop: "1px solid rgba(200,166,255,0.08)",
-    display: "flex", alignItems: "center",
-    justifyContent: "space-between", gap: 8,
+    display: "flex", alignItems: "center", justifyContent: "space-between",
   },
-  alunoInfo: { display: "flex", alignItems: "center", gap: 10, overflow: "hidden" },
+  alunoInfo: { display: "flex", alignItems: "center", gap: 10, overflow: "hidden", flex: 1 },
   alunoAvatar: {
     width: 32, height: 32, borderRadius: "50%",
     background: "linear-gradient(135deg, var(--accent-purple), var(--accent-pink))",
     display: "flex", alignItems: "center", justifyContent: "center",
-    fontSize: 14, fontWeight: 700, color: "#0E0D14",
-    flexShrink: 0,
+    fontSize: 14, fontWeight: 700, color: "#0E0D14", flexShrink: 0,
   },
   alunoNome: {
-    fontSize: 13, fontWeight: 600, margin: 0,
-    color: "var(--text)", fontFamily: "var(--font-body)",
+    fontSize: 13, fontWeight: 600, margin: 0, color: "var(--text)",
     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
   },
-  alunoApelido: {
-    fontSize: 11, margin: 0, color: "var(--muted)",
-    fontFamily: "var(--font-body)",
-  },
-  btnLogout: {
-    background: "none", border: "none",
-    cursor: "pointer", padding: 6,
-    display: "flex", alignItems: "center",
-    flexShrink: 0,
-  },
+  alunoApelido: { fontSize: 11, margin: 0, color: "var(--muted)" },
 
-  // main
-  main: {
-    flex: 1, display: "flex", flexDirection: "column",
-    height: "100dvh", overflow: "hidden", minWidth: 0,
-  },
+  main: { flex: 1, display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden", minWidth: 0 },
 
-  // header
   header: {
-    display: "flex", alignItems: "center",
-    justifyContent: "space-between",
-    padding: "12px 16px",
-    paddingTop: "calc(12px + env(safe-area-inset-top))",
+    display: "flex", alignItems: "center", justifyContent: "space-between",
+    padding: "10px 14px",
+    paddingTop: "calc(10px + env(safe-area-inset-top))",
     background: "var(--surface)",
     borderBottom: "1px solid rgba(200,166,255,0.1)",
     flexShrink: 0, zIndex: 5,
   },
+
+  // BUG 3: área de toque grande para o botão de menu
   btnMenu: {
     background: "none", border: "none",
-    cursor: "pointer", padding: 6,
-    display: "flex", alignItems: "center",
+    color: "var(--muted)",
+    cursor: "pointer",
+    padding: "8px",           // área de toque maior
+    margin: "-8px",           // compensa o padding visual
+    display: "flex", alignItems: "center", justifyContent: "center",
     borderRadius: 8,
+    minWidth: 40, minHeight: 40,
+  },
+  btnIcon: {
+    background: "rgba(200,166,255,0.08)", border: "none",
+    color: "var(--muted)", cursor: "pointer",
+    padding: 8, borderRadius: 8,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    minWidth: 36, minHeight: 36,
   },
   headerCenter: {
     display: "flex", alignItems: "center", gap: 10,
@@ -809,61 +807,37 @@ const s = {
   },
   headerName: {
     margin: 0, fontSize: 15, fontWeight: 600,
-    color: "var(--accent-purple)",
-    fontFamily: "var(--font-display)",
+    color: "var(--accent-purple)", fontFamily: "var(--font-display)",
     letterSpacing: "0.04em",
   },
   onlineRow: { display: "flex", alignItems: "center", gap: 5 },
-  onlineDot: {
-    width: 7, height: 7, borderRadius: "50%",
-    background: "#4ade80",
-    animation: "pulse 2s ease-in-out infinite",
-  },
-  onlineText: {
-    fontSize: 11, color: "#4ade80",
-    fontFamily: "var(--font-body)",
-    letterSpacing: "0.04em",
-  },
-  headerRight: {
-    display: "flex", alignItems: "center",
-    gap: 8, minWidth: 80, justifyContent: "flex-end",
-  },
+  onlineDot: { width: 7, height: 7, borderRadius: "50%", background: "#4ade80", animation: "pulse 2s ease-in-out infinite" },
+  onlineText: { fontSize: 11, color: "#4ade80", letterSpacing: "0.04em" },
+  headerRight: { display: "flex", alignItems: "center", gap: 8, minWidth: 80, justifyContent: "flex-end" },
   btnEncerrar: {
-    background: "none",
-    border: "1px solid rgba(200,166,255,0.2)",
+    background: "none", border: "1px solid rgba(200,166,255,0.2)",
     borderRadius: 20, padding: "4px 12px",
-    fontSize: 12, color: "var(--muted)",
-    cursor: "pointer", fontFamily: "var(--font-body)",
-    transition: "border-color var(--transition)",
+    fontSize: 12, color: "var(--muted)", cursor: "pointer",
+    fontFamily: "var(--font-body)",
   },
 
-  // progresso
   progressTrack: { height: 2, background: "rgba(200,166,255,0.08)", flexShrink: 0 },
   progressFill:  { height: "100%", transition: "width .5s ease, background .3s ease", borderRadius: 1 },
 
-  // mensagens
   messages: {
     flex: 1, overflowY: "auto",
-    padding: "20px 16px 12px",
+    padding: "20px 14px 12px",
     display: "flex", flexDirection: "column", gap: 14,
   },
-  msgRow: { display: "flex", alignItems: "flex-end", gap: 8 },
+  msgRow: { display: "flex", alignItems: "flex-end", gap: 8, animation: "fadeUp .25s ease" },
   ariaAvatarSmall: { flexShrink: 0 },
-
   ariaBubble: {
-    background: "var(--surface)",
-    border: "1px solid rgba(200,166,255,0.12)",
-    borderRadius: "18px 18px 18px 4px",
-    padding: "11px 15px",
-    maxWidth: "82%",
-    display: "flex", gap: 5, alignItems: "center",
+    background: "var(--surface)", border: "1px solid rgba(200,166,255,0.1)",
+    borderRadius: "18px 18px 18px 4px", padding: "11px 15px", maxWidth: "82%",
   },
   userBubble: {
-    background: "rgba(200,166,255,0.14)",
-    border: "1px solid rgba(200,166,255,0.25)",
-    borderRadius: "18px 18px 4px 18px",
-    padding: "11px 15px",
-    maxWidth: "78%",
+    background: "rgba(200,166,255,0.13)", border: "1px solid rgba(200,166,255,0.22)",
+    borderRadius: "18px 18px 4px 18px", padding: "11px 15px", maxWidth: "78%",
   },
   bubbleText: {
     margin: 0, fontSize: 15, lineHeight: 1.65,
@@ -872,74 +846,37 @@ const s = {
   },
   dot: {
     width: 7, height: 7, borderRadius: "50%",
-    background: "var(--accent-purple)",
-    display: "inline-block",
+    background: "var(--accent-purple)", display: "inline-block",
     animation: "blink 1.2s infinite",
   },
-
-  // fim de sessão
   endCard: {
-    display: "flex", flexDirection: "column",
-    alignItems: "center", gap: 10,
+    display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
     padding: "28px 24px", margin: "8px 0",
-    background: "var(--surface)",
-    borderRadius: "var(--radius)",
-    border: "1px solid rgba(200,166,255,0.15)",
-    textAlign: "center",
+    background: "var(--surface)", borderRadius: "var(--radius)",
+    border: "1px solid rgba(200,166,255,0.13)", textAlign: "center",
     animation: "fadeUp .4s ease",
   },
-  endTitle: {
-    margin: 0, fontSize: 16, fontWeight: 600,
-    color: "var(--text)", fontFamily: "var(--font-body)",
-  },
-  endSub: {
-    margin: 0, fontSize: 13, color: "var(--muted)",
-    fontFamily: "var(--font-body)", lineHeight: 1.5,
-  },
-  saving: {
-    textAlign: "center", fontSize: 12,
-    color: "var(--muted)", fontFamily: "var(--font-body)",
-    animation: "pulse 1.2s infinite",
-  },
+  endTitle: { margin: 0, fontSize: 16, fontWeight: 600, color: "var(--text)" },
+  endSub:   { margin: 0, fontSize: 13, color: "var(--muted)", lineHeight: 1.5 },
+  saving:   { textAlign: "center", fontSize: 12, color: "var(--muted)", animation: "pulse 1.2s infinite" },
 
-  // card humor
   humorCard: {
-    margin: "0 12px 8px",
-    background: "var(--surface)",
-    border: "1px solid rgba(200,166,255,0.15)",
-    borderRadius: "var(--radius-sm)",
-    overflow: "hidden",
-    flexShrink: 0,
+    margin: "0 12px 8px", background: "var(--surface)",
+    border: "1px solid rgba(200,166,255,0.13)",
+    borderRadius: "var(--radius-sm)", overflow: "hidden", flexShrink: 0,
   },
   humorToggle: {
-    width: "100%", display: "flex",
-    alignItems: "center", justifyContent: "space-between",
-    padding: "10px 14px",
-    background: "none", border: "none",
-    cursor: "pointer",
+    width: "100%", display: "flex", alignItems: "center",
+    justifyContent: "space-between", padding: "10px 14px",
+    background: "none", border: "none", cursor: "pointer",
   },
-  humorToggleText: {
-    fontSize: 13, color: "var(--accent-purple)",
-    fontFamily: "var(--font-body)", fontWeight: 500,
-  },
-  humorBody: {
-    padding: "0 14px 14px",
-    display: "flex", flexDirection: "column", gap: 10,
-  },
+  humorToggleText: { fontSize: 13, color: "var(--accent-purple)", fontWeight: 500 },
+  humorBody:    { padding: "0 14px 14px", display: "flex", flexDirection: "column", gap: 10 },
   humorSection: {},
-  humorLabel: {
-    fontSize: 11, color: "var(--muted)",
-    textTransform: "uppercase", letterSpacing: "0.06em",
-    marginBottom: 6, fontFamily: "var(--font-body)",
-  },
+  humorLabel:   { fontSize: 11, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 },
   humorOptions: { display: "flex", gap: 6 },
-  humorOpt: {
-    flex: 1, fontSize: 22, padding: "8px 4px",
-    borderRadius: 10, cursor: "pointer",
-    transition: "all .15s",
-  },
+  humorOpt:     { flex: 1, fontSize: 22, padding: "8px 4px", borderRadius: 10, cursor: "pointer", transition: "all .15s" },
 
-  // input
   inputArea: {
     padding: "10px 12px",
     paddingBottom: "calc(10px + env(safe-area-inset-bottom))",
@@ -949,39 +886,29 @@ const s = {
   },
   inputWrapper: {
     display: "flex", alignItems: "flex-end", gap: 8,
-    background: "var(--bg)",
-    border: "1.5px solid rgba(200,166,255,0.2)",
-    borderRadius: 20, padding: "8px 8px 8px 14px",
-    transition: "border-color var(--transition)",
+    background: "var(--bg)", borderRadius: 20,
+    border: "1.5px solid", padding: "8px 8px 8px 14px",
+    transition: "border-color 0.2s",
   },
   textarea: {
-    flex: 1, background: "none", border: "none",
-    outline: "none", resize: "none",
-    fontSize: 15, lineHeight: 1.5,
-    color: "var(--text)",
-    fontFamily: "var(--font-body)",
-    minHeight: 24, maxHeight: 120,
-    overflowY: "auto", padding: 0,
+    flex: 1, background: "none", border: "none", outline: "none",
+    resize: "none", fontSize: 15, lineHeight: 1.5,
+    color: "var(--text)", fontFamily: "var(--font-body)",
+    minHeight: 24, maxHeight: 120, overflowY: "auto", padding: 0,
   },
   btnSend: {
-    width: 36, height: 36, borderRadius: "50%",
-    border: "none", flexShrink: 0,
-    display: "flex", alignItems: "center", justifyContent: "center",
-    transition: "background var(--transition)",
+    width: 36, height: 36, borderRadius: "50%", border: "none",
+    flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+    transition: "background 0.2s",
   },
   inputHint: {
-    margin: "5px 0 0", fontSize: 10,
-    color: "var(--muted)", textAlign: "center",
-    fontFamily: "var(--font-body)", letterSpacing: "0.04em",
+    margin: "5px 0 0", fontSize: 10, color: "var(--muted)",
+    textAlign: "center", letterSpacing: "0.04em",
   },
-
-  // botões globais
-  btnPrimary: {
-    padding: "10px 24px", borderRadius: 50,
-    border: "none", cursor: "pointer",
+  btnPill: {
+    padding: "12px 28px", borderRadius: 50, border: "none", cursor: "pointer",
     background: "linear-gradient(135deg, var(--accent-purple), var(--accent-pink))",
     color: "#0E0D14", fontSize: 14, fontWeight: 600,
-    fontFamily: "var(--font-body)",
-    transition: "opacity var(--transition)",
+    fontFamily: "var(--font-body)", transition: "opacity 0.2s",
   },
 };
