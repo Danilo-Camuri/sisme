@@ -1,62 +1,38 @@
 /* ─────────────────────────────────────────────────────────────
-   ARIA — Design Tokens v1.0
-   Responsável técnico: Danilo Camuri Teixeira Lopes | CRP 21/02554
-   Importado em: src/styles/global.css
+   ARIA — Design Tokens v1.1
+   BUG 6 corrigido: fundo claro é #F7F5FF (branco creme), não roxo
 ───────────────────────────────────────────────────────────── */
 
+/* ── Tema CLARO (padrão — sem data-theme) ──────────────────── */
 :root {
-  /* Backgrounds */
-  --bg: #F7F5FF;
-  --bg-dark: #0E0D14;
-  --surface: #FFFFFF;
-  --surface-dark: #17151F;
-
-  /* Accent */
+  --bg:            #F7F5FF;   /* branco creme — BUG 6 fix */
+  --surface:       #FFFFFF;
   --accent-purple: #C8A6FF;
-  --accent-pink: #FF9FCB;
-  --accent-blue: #9FDFFF;
-  --accent-gold: #FFD580;
-
-  /* Text */
-  --text: #1A1826;
-  --text-dark: #F0EEF8;
-  --muted: #8A87A0;
-
-  /* Shapes */
-  --radius: 20px;
-  --radius-sm: 12px;
-
-  /* Motion */
-  --transition: 0.3s ease;
-
-  /* Fonts */
-  --font-display: 'Fraunces', Georgia, serif;
-  --font-body: 'DM Sans', system-ui, sans-serif;
-
-  /* Aliases no tema claro (padrão) */
-  --bg-current: var(--bg);
-  --surface-current: var(--surface);
-  --text-current: var(--text);
+  --accent-pink:   #FF9FCB;
+  --accent-blue:   #9FDFFF;
+  --accent-gold:   #FFD580;
+  --text:          #1A1826;
+  --text-dark:     #F0EEF8;
+  --muted:         #8A87A0;
+  --radius:        20px;
+  --radius-sm:     12px;
+  --transition:    0.3s ease;
+  --font-display:  'Fraunces', Georgia, serif;
+  --font-body:     'DM Sans', system-ui, sans-serif;
 }
 
-/* ── Tema escuro ────────────────────────────────────────────── */
+/* ── Tema ESCURO (data-theme="dark") ───────────────────────── */
 [data-theme="dark"] {
-  --bg-current: var(--bg-dark);
-  --surface-current: var(--surface-dark);
-  --text-current: var(--text-dark);
-
-  /* Sobrescreve os aliases principais */
-  --bg: #0E0D14;
+  --bg:      #0E0D14;
   --surface: #17151F;
-  --text: #F0EEF8;
+  --text:    #F0EEF8;
+  --muted:   #8A87A0;
 }
 
-/* ── Utilitários globais de tema ────────────────────────────── */
+/* ── Base global ────────────────────────────────────────────── */
 body {
   background-color: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
-  transition:
-    background-color var(--transition),
-    color var(--transition);
+  transition: background-color var(--transition), color var(--transition);
 }
