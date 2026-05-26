@@ -73,3 +73,34 @@ input:-webkit-autofill:active {
 /* Safe area mobile */
 .safe-top    { padding-top: env(safe-area-inset-top); }
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+/* ── Compatibilidade com componentes de auth (Login, Cadastro, Senha) ── */
+/* BUG 7: botão de login com contraste correto */
+:root {
+  --accent-primary:  #C8A6FF;   /* roxo ARIA */
+  --accent-danger:   #FF9FCB;
+  --accent-success:  #4ade80;
+  --bg-card:         var(--surface);
+  --bg-input:        var(--surface);
+  --border:          rgba(200,166,255,0.15);
+  --border-focus:    #C8A6FF;
+  --text-primary:    var(--text);
+  --text-secondary:  var(--muted);
+  --text-muted:      var(--muted);
+  --font-display:    'Fraunces', Georgia, serif;
+}
+
+[data-theme="dark"] {
+  --bg-card:   #17151F;
+  --bg-input:  #1E1B2E;
+  --border:    rgba(200,166,255,0.12);
+  --text-primary:   #F0EEF8;
+  --text-secondary: #8A87A0;
+}
+
+/* BUG 7: força texto branco no botão primary do FormElements */
+button[style*="accent-primary"],
+.btn-primary {
+  color: #0E0D14 !important;
+  font-weight: 600;
+}
