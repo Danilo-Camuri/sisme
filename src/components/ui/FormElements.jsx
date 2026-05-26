@@ -117,7 +117,7 @@ export function Button({ children, variant = 'primary', loading, fullWidth, ...p
   const variants = {
     primary: {
       background: 'var(--accent-primary)',
-      color: '#fff',
+      color: '#0E0D14',
       border: 'none'
     },
     ghost: {
