@@ -1,42 +1,45 @@
 /* ─────────────────────────────────────────────────────────────
-   ARIA — Design Tokens v1.2
-   Fonte única de todas as variáveis CSS do projeto.
-   Importado por: src/styles/global.css
-   NÃO duplicar variáveis em nenhum outro arquivo.
+   ARIA — Design Tokens v1.3
+   FONTE ÚNICA de todas as variáveis CSS.
+   Importado PRIMEIRO por: src/styles/global.css
 ───────────────────────────────────────────────────────────── */
 
-/* ── Tema CLARO (padrão — das 6h às 18h) ───────────────────── */
+/* ── Tema CLARO (padrão) ────────────────────────────────────── */
 :root {
-  /* Backgrounds */
-  --bg:      #F7F5FF;   /* branco creme */
-  --surface: #FFFFFF;
+  --bg:      #F7F5FF !important;
+  --surface: #FFFFFF !important;
+  --text:    #1A1826;
+  --muted:   #8A87A0;
 
-  /* Accent */
   --accent-purple: #C8A6FF;
   --accent-pink:   #FF9FCB;
   --accent-blue:   #9FDFFF;
   --accent-gold:   #FFD580;
 
-  /* Texto */
-  --text:  #1A1826;
-  --muted: #8A87A0;
-
-  /* Formas */
   --radius:    20px;
   --radius-sm: 12px;
-
-  /* Movimento */
   --transition: 0.3s ease;
 
-  /* Fontes */
   --font-display: 'Fraunces', Georgia, serif;
   --font-body:    'DM Sans', system-ui, sans-serif;
 }
 
-/* ── Tema ESCURO (data-theme="dark" — das 18h às 6h) ────────── */
+/* ── Tema ESCURO (data-theme="dark") ────────────────────────── */
 [data-theme="dark"] {
-  --bg:      #0E0D14;
-  --surface: #17151F;
+  --bg:      #0E0D14 !important;
+  --surface: #17151F !important;
   --text:    #F0EEF8;
   --muted:   #8A87A0;
+}
+
+/* ── Forçar background no html e body diretamente ────────────── */
+html, body {
+  background-color: #F7F5FF;
+}
+
+[data-theme="dark"] html,
+[data-theme="dark"] body,
+html[data-theme="dark"],
+body[data-theme="dark"] {
+  background-color: #0E0D14;
 }
