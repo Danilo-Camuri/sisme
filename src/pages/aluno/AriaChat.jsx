@@ -9,10 +9,10 @@ import {
 } from "./systemPrompts";
 
 // ─── Constantes ───────────────────────────────────────────────
-const MODEL      = "claude-haiku-4-5-20251001";
+const MODEL      = "claude-sonnet-4-20250514";  // Etapa 2: sonnet para qualidade clínica
 const MAX_TOKENS = 600;
 const MAX_TROCAS = 15;   // BUG 2: resumo gerado a cada 15 trocas
-const MAX_HIST   = 3;
+const MAX_HIST   = 5;   // Etapa 2: últimas 5 sessões para memória longitudinal
 
 // ─── Helpers ──────────────────────────────────────────────────
 function fmtData(iso) {
@@ -134,7 +134,7 @@ export default function AriaChat() {
           .select("id, resumo_temas, resumo_sessao, construto_cortex, ponto_retomada, criado_em")
           .eq("aluno_id", aluno.id)
           .order("criado_em", { ascending: false })
-          .limit(30);
+          .limit(50);   // busca 50 para sidebar, filtra 5 com resumo para memória
 
         setAllSessions(todas || []);
 
