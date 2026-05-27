@@ -6,7 +6,7 @@
 
 /* ── Tema CLARO (padrão) ────────────────────────────────────── */
 :root {
-  --bg:      #F7F5FF !important;
+  --bg:      #F5F5F0 !important;
   --surface: #FFFFFF !important;
   --text:    #1A1826;
   --muted:   #8A87A0;
@@ -34,7 +34,7 @@
 
 /* ── Forçar background no html e body diretamente ────────────── */
 html, body {
-  background-color: #F7F5FF;
+  background-color: #F5F5F0;
 }
 
 [data-theme="dark"] html,
