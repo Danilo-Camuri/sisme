@@ -1,38 +1,42 @@
 /* ─────────────────────────────────────────────────────────────
-   ARIA — Design Tokens v1.1
-   BUG 6 corrigido: fundo claro é #F7F5FF (branco creme), não roxo
+   ARIA — Design Tokens v1.2
+   Fonte única de todas as variáveis CSS do projeto.
+   Importado por: src/styles/global.css
+   NÃO duplicar variáveis em nenhum outro arquivo.
 ───────────────────────────────────────────────────────────── */
 
-/* ── Tema CLARO (padrão — sem data-theme) ──────────────────── */
+/* ── Tema CLARO (padrão — das 6h às 18h) ───────────────────── */
 :root {
-  --bg:            #F7F5FF;   /* branco creme — BUG 6 fix */
-  --surface:       #FFFFFF;
+  /* Backgrounds */
+  --bg:      #F7F5FF;   /* branco creme */
+  --surface: #FFFFFF;
+
+  /* Accent */
   --accent-purple: #C8A6FF;
   --accent-pink:   #FF9FCB;
   --accent-blue:   #9FDFFF;
   --accent-gold:   #FFD580;
-  --text:          #1A1826;
-  --text-dark:     #F0EEF8;
-  --muted:         #8A87A0;
-  --radius:        20px;
-  --radius-sm:     12px;
-  --transition:    0.3s ease;
-  --font-display:  'Fraunces', Georgia, serif;
-  --font-body:     'DM Sans', system-ui, sans-serif;
+
+  /* Texto */
+  --text:  #1A1826;
+  --muted: #8A87A0;
+
+  /* Formas */
+  --radius:    20px;
+  --radius-sm: 12px;
+
+  /* Movimento */
+  --transition: 0.3s ease;
+
+  /* Fontes */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body:    'DM Sans', system-ui, sans-serif;
 }
 
-/* ── Tema ESCURO (data-theme="dark") ───────────────────────── */
+/* ── Tema ESCURO (data-theme="dark" — das 18h às 6h) ────────── */
 [data-theme="dark"] {
   --bg:      #0E0D14;
   --surface: #17151F;
   --text:    #F0EEF8;
   --muted:   #8A87A0;
-}
-
-/* ── Base global ────────────────────────────────────────────── */
-body {
-  background-color: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
-  transition: background-color var(--transition), color var(--transition);
 }
