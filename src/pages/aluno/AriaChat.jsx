@@ -90,7 +90,7 @@ function clearLocal(alunoId) {
 }
 
 // ─── Componente principal ─────────────────────────────────────
-export default function AriaChat() {
+export default function AriaChat({ portaEntrada = null, onNovaConversa = null }) {
   const { aluno, logout } = useAuth();
 
   const [messages,      setMessages]      = useState([]);
@@ -118,7 +118,8 @@ export default function AriaChat() {
   // Modal de resumo de sessão
   const [sessaoModal,  setSessaoModal]  = useState(null); // sessão selecionada
 
-  const bottomRef   = useRef(null);
+  const portaInjetadaRef = useRef(false);  // controla injeção única da porta
+    const bottomRef   = useRef(null);
   const textareaRef = useRef(null);  // BUG 5: foco no input
   const crisisRef   = useRef(0);
   const touchStartX = useRef(null);
@@ -298,6 +299,7 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
         escola_id:          aluno.escola_id,
         usuario_id:         user.id,
         assistente:         "aria",
+        porta_entrada:      portaEntrada || null,
         resumo_temas:       resumo.resumo_sessao,
         resumo_sessao:      resumo.resumo_sessao,
         construto_cortex:   resumo.construto_cortex  || null,
@@ -330,6 +332,13 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
     // BUG 5: devolver foco ao input imediatamente
     setTimeout(() => textareaRef.current?.focus(), 50);
 
+    // Porta de entrada — injetada silenciosamente só na 1ª mensagem
+    let textoParaAPI = userText;
+    if (portaEntrada && !portaInjetadaRef.current) {
+      textoParaAPI = `[porta: ${portaEntrada}]\n${userText}`;
+      portaInjetadaRef.current = true;
+    }
+
     const msgCrisis   = detectCrisisLevel(userText);
     const newCrisis   = Math.max(crisisRef.current, msgCrisis);
     crisisRef.current = newCrisis;
@@ -345,9 +354,15 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
     saveLocal(aluno.id, newMessages, newTrocas, newCrisis);
 
     try {
+      // Última msg usa textoParaAPI (com porta) — tela mostra userText limpo
       const apiMessages = newMessages
         .filter(m => m.role !== "system")
-        .map(m => ({ role: m.role, content: m.content }));
+        .map((m, i, arr) => ({
+          role: m.role,
+          content: (m.role === "user" && i === arr.length - 1)
+            ? textoParaAPI
+            : m.content,
+        }));
 
       let sp = systemPrompt;
       if (newCrisis === 3)       sp += "\n\nATENÇÃO NÍVEL 3: use a fala exata do protocolo de crise Nível 3. Após isso, encerre com cuidado.";
@@ -407,6 +422,8 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
 
   async function novaConversa() {
     setSidebarOpen(false);
+    // Se houver callback externo (HomeAluno), volta para tela de portas
+    if (onNovaConversa) { onNovaConversa(); return; }
     if (messages.length > 1 && !sessionEnded) {
       setSessionEnded(true);
       await saveSession(messages, crisisRef.current);
