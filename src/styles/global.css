@@ -1,6 +1,6 @@
-/* global.css — ARIA v1.0 */
+/* global.css — ARIA v2.0 */
+/* ÚNICO lugar que define variáveis CSS — sem duplicação */
 
-/* 1. Design tokens da ARIA (cores, fontes, raios, transições) */
 @import './aria-tokens.css';
 
 *, *::before, *::after {
@@ -23,6 +23,7 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--transition), color var(--transition);
 }
 
 #root {
@@ -49,16 +50,12 @@ input, textarea, select {
   font-size: 16px;
 }
 
-a {
-  color: var(--accent-purple);
-  text-decoration: none;
-}
+a { color: var(--accent-purple); text-decoration: none; }
 
-/* Autocomplete escuro (Chrome/Safari) */
+/* Autocomplete — fundo correto por tema */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
+input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0 999px var(--surface) inset !important;
   -webkit-text-fill-color: var(--text) !important;
   caret-color: var(--text);
@@ -68,39 +65,39 @@ input:-webkit-autofill:active {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 2px; opacity: 0.4; }
+::-webkit-scrollbar-thumb { background: rgba(138,135,160,.3); border-radius: 2px; }
 
 /* Safe area mobile */
 .safe-top    { padding-top: env(safe-area-inset-top); }
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 
-/* ── Compatibilidade com componentes de auth (Login, Cadastro, Senha) ── */
-/* BUG 7: botão de login com contraste correto */
+/* ── Variáveis de compatibilidade para componentes de auth ── */
+/* Login, Cadastro, Senha usam nomes antigos — mapeados aqui  */
 :root {
-  --accent-primary:  #C8A6FF;   /* roxo ARIA */
-  --accent-danger:   #FF9FCB;
+  --accent-primary:  var(--accent-purple);
+  --accent-danger:   var(--accent-pink);
   --accent-success:  #4ade80;
   --bg-card:         var(--surface);
   --bg-input:        var(--surface);
+  --bg-elevated:     var(--surface);
   --border:          rgba(200,166,255,0.15);
-  --border-focus:    #C8A6FF;
+  --border-focus:    var(--accent-purple);
   --text-primary:    var(--text);
   --text-secondary:  var(--muted);
   --text-muted:      var(--muted);
+  --radius-md:       var(--radius);
+  --radius-sm:       12px;
   --font-display:    'Fraunces', Georgia, serif;
 }
 
 [data-theme="dark"] {
-  --bg-card:   #17151F;
-  --bg-input:  #1E1B2E;
-  --border:    rgba(200,166,255,0.12);
+  --bg-card:        #17151F;
+  --bg-input:       #1E1B2E;
+  --bg-elevated:    #1E1B2E;
+  --border:         rgba(200,166,255,0.12);
   --text-primary:   #F0EEF8;
   --text-secondary: #8A87A0;
 }
 
-/* BUG 7: força texto branco no botão primary do FormElements */
-button[style*="accent-primary"],
-.btn-primary {
-  color: #0E0D14 !important;
-  font-weight: 600;
-}
+/* ── Botão primary dos componentes de auth ── */
+/* Garante contraste correto independente do tema */
