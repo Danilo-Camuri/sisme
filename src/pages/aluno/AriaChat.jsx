@@ -6,6 +6,7 @@ import {
   getAberturaARIA,
   getARIASystemPrompt,
   getSummaryPrompt,
+  montarBlocoMemoria,
 } from "./systemPrompts";
 
 // ─── Constantes ───────────────────────────────────────────────
@@ -141,6 +142,10 @@ export default function AriaChat() {
         const comResumo = (todas || []).filter(c => c.resumo_sessao).slice(0, MAX_HIST);
         setHistorico(comResumo);
 
+        // Etapa 3: log do bloco de memória para diagnóstico
+        const blocoLog = montarBlocoMemoria(apelido, comResumo);
+        console.log("[ARIA memória]\n" + blocoLog);
+
         const sp = getARIASystemPrompt(apelido, comResumo);
         setSystemPrompt(sp);
 
@@ -185,22 +190,40 @@ export default function AriaChat() {
     } catch (e) { console.error("checkin:", e); }
   }
 
-  // ── BUG 2: saveSession com geração real de resumo ─────────
+  // ── saveSession — geração de resumo via API ──────────────
   const saveSession = useCallback(async (finalMessages, nivelFinal) => {
     if (!aluno || finalMessages.length < 2) return;
     setSavingSession(true);
     try {
-      const apiMessages = finalMessages
+      // Montar histórico legível para o modelo resumir
+      const historicoTexto = finalMessages
         .filter(m => m.role !== "system")
-        .map(m => ({ role: m.role, content: m.content }));
+        .map(m => `${m.role === "user" ? "Aluno" : "ARIA"}: ${m.content}`)
+        .join("\n");
 
+      // Chamada conforme spec do cofundador:
+      // histórico vai no CONTEÚDO da mensagem, não no system
       const res = await fetch("/.netlify/functions/anthropic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: MODEL, max_tokens: 500,
-          system: getSummaryPrompt(),
-          messages: apiMessages,
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 300,
+          messages: [{
+            role: "user",
+            content: `Com base nessa conversa, gere um resumo estruturado em JSON com exatamente estes campos:
+- resumo_sessao: descrição dos temas abordados em 2 a 4 frases, sem citar falas literais
+- construto_cortex: letra do construto mais ativado — C, O, R, T, E ou X
+- nivel_crise: número de 0 a 3
+- ponto_retomada: uma frase curta em primeira pessoa da ARIA para retomar na próxima conversa, em minúsculas
+
+Construtos CÓRTEX: C=Carga emocional, O=Organização/foco, R=Relações interpessoais, T=Tensão/ativação, E=Energia/vitalidade, X=Xeque existencial.
+
+Conversa:
+${historicoTexto}
+
+Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
+          }],
         }),
       });
 
@@ -210,10 +233,16 @@ export default function AriaChat() {
 
       let resumo = null;
       try {
-        const clean = rawText.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+        // limpar qualquer markdown que o modelo possa ter adicionado
+        const clean = rawText
+          .replace(/^```json\s*/i, "")
+          .replace(/^```\s*/i, "")
+          .replace(/```\s*$/i, "")
+          .trim();
         resumo = JSON.parse(clean);
-      } catch {
-        // se não parsear, usa o texto como resumo_sessao
+        console.log("[ARIA resumo] parsed:", resumo);
+      } catch (parseErr) {
+        console.warn("[ARIA resumo] parse falhou:", parseErr.message, "raw:", rawText);
         resumo = {
           resumo_sessao:    rawText.slice(0, 600) || "Sessão encerrada.",
           construto_cortex: null,
@@ -222,10 +251,11 @@ export default function AriaChat() {
         };
       }
 
+      // Garantir que resumo_sessao nunca fique genérico demais
       if (!resumo?.resumo_sessao || resumo.resumo_sessao.trim() === "") {
-        resumo.resumo_sessao = finalMessages.length <= 3
+        resumo.resumo_sessao = finalMessages.filter(m => m.role === "user").length <= 2
           ? "Sessão muito curta para resumo."
-          : "Sessão encerrada.";
+          : "Sessão encerrada sem resumo gerado.";
       }
 
       const { data: { user } } = await supabase.auth.getUser();
@@ -358,10 +388,11 @@ export default function AriaChat() {
       .select("id, resumo_temas, resumo_sessao, construto_cortex, ponto_retomada, criado_em")
       .eq("aluno_id", aluno.id)
       .order("criado_em", { ascending: false })
-      .limit(30);
+      .limit(50);
     setAllSessions(todas || []);
     const comResumo = (todas || []).filter(c => c.resumo_sessao).slice(0, MAX_HIST);
     setHistorico(comResumo);
+    console.log("[ARIA memória nova conversa]\n" + montarBlocoMemoria(apelido, comResumo));
     const sp = getARIASystemPrompt(apelido, comResumo);
     setSystemPrompt(sp);
     const abertura = getAberturaARIA(apelido, new Date().getHours(), comResumo);
