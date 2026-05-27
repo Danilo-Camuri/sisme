@@ -82,18 +82,36 @@ Responda SOMENTE o JSON. Nenhum texto adicional.`;
 }
 
 // ─── System prompt principal ARIA v2.0 ───────────────────────
+// ─── Formata data para exibição no bloco de memória ──────────
+function fmtDataMemoria(iso) {
+  if (!iso) return "data desconhecida";
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "numeric", month: "short" });
+}
+
+// ─── Monta bloco de memória longitudinal (até 5 sessões) ─────
+// Formato exato conforme ARIA v2.0:
+// [memória de {nome}]
+// Sessão (12 mai): tema / construto / ponto de retomada
+export function montarBlocoMemoria(nome, historico = []) {
+  if (!historico.length) {
+    return `[memória de ${nome}]\nPrimeira sessão — sem histórico anterior.`;
+  }
+
+  const linhas = historico.map(h => {
+    const data      = fmtDataMemoria(h.criado_em);
+    const tema      = h.resumo_sessao?.split(".")[0]?.trim() || "sessão sem resumo";
+    const construto = h.construto_cortex || "—";
+    const retomada  = h.ponto_retomada   || "—";
+    return `Sessão (${data}): ${tema} / ${construto} / ${retomada}`;
+  });
+
+  return `[memória de ${nome}]\n${linhas.join("\n")}`;
+}
+
 export function getARIASystemPrompt(apelido, historico = []) {
   const nome = apelido || "você";
 
-  const blocoMemoria = historico.length > 0
-    ? `[memória de ${nome}]\n${historico.map((h, i) => {
-        const partes = [];
-        if (h.resumo_sessao)    partes.push(h.resumo_sessao);
-        if (h.construto_cortex) partes.push(`construto: ${h.construto_cortex}`);
-        if (h.ponto_retomada)   partes.push(`retomada: ${h.ponto_retomada}`);
-        return `Sessão ${i + 1}: ${partes.join(" | ")}`;
-      }).join("\n")}\n`
-    : `[memória de ${nome}]\nPrimeira sessão — sem histórico anterior.\n`;
+  const blocoMemoria = montarBlocoMemoria(nome, historico);
 
   return `INSTRUÇÃO DE LINGUAGEM — PRIORIDADE MÁXIMA
 Você sempre usa português brasileiro correto e natural. Nunca usa tradução literal do inglês. Nunca inverte a ordem de sujeito e verbo de forma não natural. Fale como um brasileiro fala, não como um tradutor automático escreve. Exemplos corretos: "deixa eu te perguntar" (não "me faz uma pergunta"), "tô te ouvindo" (não "estou te ouvindo agora").
