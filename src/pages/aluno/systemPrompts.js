@@ -99,7 +99,18 @@ export function montarBlocoMemoria(nome, historico = []) {
 
   const linhas = historico.map(h => {
     const data      = fmtDataMemoria(h.criado_em);
-    const tema      = h.resumo_sessao?.split(".")[0]?.trim() || "sessão sem resumo";
+    // Tratar JSON bruto legado e textos genéricos
+    let resumoRaw = h.resumo_sessao || "";
+    if (resumoRaw.startsWith("{")) {
+      try {
+        const p = JSON.parse(resumoRaw);
+        resumoRaw = p.resumo_sessao || p.resumo_narrativo || "";
+      } catch { resumoRaw = ""; }
+    }
+    const genericos = ["sessão encerrada", "sessão muito curta", "sessão encerrada sem resumo"];
+    const tema = (!resumoRaw || genericos.some(g => resumoRaw.toLowerCase().startsWith(g)))
+      ? "sessão sem resumo detalhado"
+      : resumoRaw.split(".")[0]?.trim() || "sessão sem resumo";
     const construto = h.construto_cortex || "—";
     const retomada  = h.ponto_retomada   || "—";
     return `Sessão (${data}): ${tema} / ${construto} / ${retomada}`;
