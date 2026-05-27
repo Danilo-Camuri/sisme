@@ -1,5 +1,5 @@
-/* global.css — ARIA v2.0 */
-/* ÚNICO lugar que define variáveis CSS — sem duplicação */
+/* global.css — ARIA v2.0 — ÚNICO arquivo que define estilos base */
+/* NÃO adicionar variáveis de cor aqui — todas vêm do aria-tokens.css */
 
 @import './aria-tokens.css';
 
@@ -12,6 +12,7 @@
 html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
+  background-color: var(--bg);
 }
 
 body {
@@ -30,6 +31,7 @@ body {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  background-color: var(--bg);
 }
 
 h1, h2, h3, h4 {
@@ -52,7 +54,6 @@ input, textarea, select {
 
 a { color: var(--accent-purple); text-decoration: none; }
 
-/* Autocomplete — fundo correto por tema */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
@@ -62,17 +63,11 @@ input:-webkit-autofill:focus {
   transition: background-color 9999s ease-in-out 0s;
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(138,135,160,.3); border-radius: 2px; }
 
-/* Safe area mobile */
-.safe-top    { padding-top: env(safe-area-inset-top); }
-.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-
-/* ── Variáveis de compatibilidade para componentes de auth ── */
-/* Login, Cadastro, Senha usam nomes antigos — mapeados aqui  */
+/* ── Aliases para componentes de auth legados ─────────────────── */
 :root {
   --accent-primary:  var(--accent-purple);
   --accent-danger:   var(--accent-pink);
@@ -86,7 +81,6 @@ input:-webkit-autofill:focus {
   --text-secondary:  var(--muted);
   --text-muted:      var(--muted);
   --radius-md:       var(--radius);
-  --radius-sm:       12px;
   --font-display:    'Fraunces', Georgia, serif;
 }
 
@@ -98,6 +92,3 @@ input:-webkit-autofill:focus {
   --text-primary:   #F0EEF8;
   --text-secondary: #8A87A0;
 }
-
-/* ── Botão primary dos componentes de auth ── */
-/* Garante contraste correto independente do tema */
