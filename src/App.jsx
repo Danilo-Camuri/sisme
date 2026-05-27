@@ -5,7 +5,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute'
 import Login from './components/auth/Login'
 import { RecuperarSenha, NovaSenha } from './components/auth/Senha'
 import Onboarding from './pages/onboarding/Onboarding'
-import AriaChat from './pages/aluno/AriaChat'
+import HomeAluno from './pages/aluno/HomeAluno'
 
 function AlunoRoute({ children }) {
   const { aluno, loading } = useAuth()
@@ -30,7 +30,7 @@ function AppWithTheme() {
         />
         <Route
           path="/home"
-          element={<ProtectedRoute><AlunoRoute><AriaChat /></AlunoRoute></ProtectedRoute>}
+          element={<ProtectedRoute><AlunoRoute><HomeAluno /></AlunoRoute></ProtectedRoute>}
         />
         <Route path="/"  element={<Navigate to="/home"  replace />} />
         <Route path="*"  element={<Navigate to="/home"  replace />} />
