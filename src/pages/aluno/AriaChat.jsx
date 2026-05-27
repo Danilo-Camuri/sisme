@@ -10,7 +10,7 @@ import {
 } from "./systemPrompts";
 
 // ─── Constantes ───────────────────────────────────────────────
-const MODEL      = "claude-sonnet-4-20250514";  // Etapa 2: sonnet para qualidade clínica
+const MODEL      = "claude-haiku-4-5-20251001";  // Revertido: sonnet-4-20250514 não existe, usar haiku confirmado
 const MAX_TOKENS = 600;
 const MAX_TROCAS = 15;   // BUG 2: resumo gerado a cada 15 trocas
 const MAX_HIST   = 5;   // Etapa 2: últimas 5 sessões para memória longitudinal
@@ -114,6 +114,9 @@ export default function AriaChat() {
   const [humorValor,   setHumorValue]   = useState(null);
   const [energiaValor, setEnergiaValue] = useState(null);
   const [humorSalvo,   setHumorSalvo]   = useState(false);
+
+  // Modal de resumo de sessão
+  const [sessaoModal,  setSessaoModal]  = useState(null); // sessão selecionada
 
   const bottomRef   = useRef(null);
   const textareaRef = useRef(null);  // BUG 5: foco no input
@@ -238,7 +241,7 @@ export default function AriaChat() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          model: MODEL,
           max_tokens: 300,
           messages: [{
             role: "user",
@@ -377,7 +380,8 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
         setSessionEnded(true);
         await saveSession(updated, finalCrisis);
       }
-    } catch {
+    } catch (err) {
+      console.error("[ARIA] sendMessage erro:", err);
       setMessages(prev => [...prev, { role: "assistant", content: "deu um problema técnico aqui. pode repetir?" }]);
     } finally {
       setLoading(false);
@@ -449,13 +453,63 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
   return (
     <div style={s.shell}>
 
-      {/* BUG 3: overlay com z-index correto e pointer-events */}
+      {/* Overlay sidebar */}
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
           style={s.overlay}
           aria-label="fechar menu"
         />
+      )}
+
+      {/* ── Modal de resumo de sessão ───────────────────────── */}
+      {sessaoModal && (
+        <div style={s.modalOverlay} onClick={() => setSessaoModal(null)}>
+          <div style={s.modalCard} onClick={e => e.stopPropagation()}>
+            <div style={s.modalHeader}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {sessaoModal.construto_cortex && (
+                  <span style={s.badge} title={construtoLabel(sessaoModal.construto_cortex)}>
+                    {sessaoModal.construto_cortex}
+                  </span>
+                )}
+                <span style={s.sessionDate}>{fmtData(sessaoModal.criado_em)}</span>
+              </div>
+              <button onClick={() => setSessaoModal(null)} style={s.modalClose}>×</button>
+            </div>
+
+            <div style={s.modalBody}>
+              {sessaoModal.resumo_sessao && !["sessão encerrada", "sessão muito curta", "sessão sem resumo"].some(g => sessaoModal.resumo_sessao.toLowerCase().startsWith(g)) ? (
+                <>
+                  <p style={s.modalLabel}>o que a gente falou</p>
+                  <p style={s.modalText}>{sessaoModal.resumo_sessao}</p>
+                </>
+              ) : (
+                <p style={{ ...s.modalText, color: "var(--muted)", fontStyle: "italic" }}>
+                  essa sessão não tem resumo gravado ainda.
+                </p>
+              )}
+
+              {sessaoModal.ponto_retomada && (
+                <>
+                  <p style={{ ...s.modalLabel, marginTop: 16 }}>ficou em aberto</p>
+                  <p style={{ ...s.modalText, color: "var(--accent-purple)" }}>
+                    {sessaoModal.ponto_retomada}
+                  </p>
+                </>
+              )}
+
+              <div style={s.modalFooter}>
+                <span style={s.sessionDate}>
+                  {sessaoModal.trocas_realizadas ? `${sessaoModal.trocas_realizadas} trocas` : ""}
+                </span>
+                <button onClick={() => setSessaoModal(null)} style={s.btnPill}>
+                  fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Sidebar ────────────────────────────────────────── */}
@@ -478,7 +532,13 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
             <p style={s.sessionEmpty}>primeira sessão 🌱</p>
           ) : (
             allSessions.map((sess, i) => (
-              <div key={sess.id || i} style={s.sessionItem}>
+              <div
+                key={sess.id || i}
+                style={{ ...s.sessionItem, cursor: "pointer" }}
+                onClick={() => { setSessaoModal(sess); setSidebarOpen(false); }}
+                role="button"
+                tabIndex={0}
+              >
                 <div style={s.sessionHeader}>
                   {sess.construto_cortex && (
                     <span style={s.badge} title={construtoLabel(sess.construto_cortex)}>
@@ -580,9 +640,9 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
 
           {sessionEnded && !savingSession && (
             <div style={s.endCard}>
-              <span style={{ fontSize: 28 }}>💜</span>
+              
               <p style={s.endTitle}>sessão encerrada</p>
-              <p style={s.endSub}>vou guardar tudo isso aqui. quando você voltar, começo de onde a gente parou.</p>
+              <p style={s.endSub}>vou guardar essa conversa. quando você voltar, começo de onde a gente parou.</p>
               <button onClick={novaConversa} style={s.btnPill}>nova conversa</button>
             </div>
           )}
@@ -986,5 +1046,54 @@ const s = {
     background: "linear-gradient(135deg, var(--accent-purple), var(--accent-pink))",
     color: "#0E0D14", fontSize: 14, fontWeight: 600,
     fontFamily: "var(--font-body)", transition: "opacity 0.2s",
+  },
+
+  // Modal de resumo
+  modalOverlay: {
+    position: "fixed", inset: 0,
+    background: "rgba(14,13,20,0.6)",
+    backdropFilter: "blur(4px)",
+    zIndex: 30,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    padding: 20,
+  },
+  modalCard: {
+    background: "var(--surface)",
+    borderRadius: "var(--radius)",
+    border: "1px solid rgba(200,166,255,0.15)",
+    width: "100%", maxWidth: 420,
+    overflow: "hidden",
+    animation: "fadeUp .25s ease",
+  },
+  modalHeader: {
+    display: "flex", alignItems: "center",
+    justifyContent: "space-between",
+    padding: "16px 20px 12px",
+    borderBottom: "1px solid rgba(200,166,255,0.1)",
+  },
+  modalClose: {
+    background: "none", border: "none",
+    color: "var(--muted)", fontSize: 22,
+    cursor: "pointer", lineHeight: 1,
+    padding: "0 4px",
+  },
+  modalBody: {
+    padding: "20px",
+  },
+  modalLabel: {
+    fontSize: 11, color: "var(--muted)",
+    textTransform: "uppercase", letterSpacing: "0.08em",
+    fontFamily: "var(--font-body)", marginBottom: 8,
+  },
+  modalText: {
+    fontSize: 14, color: "var(--text)",
+    lineHeight: 1.65, margin: 0,
+    fontFamily: "var(--font-body)",
+  },
+  modalFooter: {
+    display: "flex", alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 24, paddingTop: 16,
+    borderTop: "1px solid rgba(200,166,255,0.08)",
   },
 };
