@@ -29,9 +29,40 @@ function fmtData(iso) {
 
 function tituloSessao(resumo) {
   if (!resumo) return "sessão sem título";
-  const s     = typeof resumo === "string" ? resumo : "";
-  const words = s.trim().split(/\s+/).slice(0, 6).join(" ");
-  return words.length > 0 ? words.toLowerCase() : "sessão";
+
+  // Limpar JSON bruto antigo (formato legado: {"resumo_narrativo":"..."})
+  let texto = typeof resumo === "string" ? resumo : "";
+  if (texto.startsWith("{")) {
+    try {
+      const parsed = JSON.parse(texto);
+      texto = parsed.resumo_sessao || parsed.resumo_narrativo || "";
+    } catch {
+      texto = "";
+    }
+  }
+
+  // Remover textos genéricos que não dizem nada
+  const genericos = ["sessão encerrada", "sessão muito curta", "sessão encerrada sem resumo"];
+  if (!texto || genericos.some(g => texto.toLowerCase().startsWith(g))) {
+    return "sessão sem resumo";
+  }
+
+  // Pegar as primeiras 7 palavras como título
+  const words = texto.trim().split(/\s+/).slice(0, 7).join(" ");
+  return words.length > 0 ? words.toLowerCase() : "sessão sem título";
+}
+
+// ─── Label legível dos construtos CÓRTEX ─────────────────────
+function construtoLabel(letra) {
+  const labels = {
+    C: "Carga emocional",
+    O: "Organização e foco",
+    R: "Relações interpessoais",
+    T: "Tensão e ativação",
+    E: "Energia e vitalidade",
+    X: "Xeque existencial",
+  };
+  return labels[letra] || letra;
 }
 
 // ─── BUG 1: chave de persistência local por aluno ─────────────
@@ -449,12 +480,19 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
             allSessions.map((sess, i) => (
               <div key={sess.id || i} style={s.sessionItem}>
                 <div style={s.sessionHeader}>
-                  {sess.construto_cortex && <span style={s.badge}>{sess.construto_cortex}</span>}
+                  {sess.construto_cortex && (
+                    <span style={s.badge} title={construtoLabel(sess.construto_cortex)}>
+                      {sess.construto_cortex}
+                    </span>
+                  )}
                   <span style={s.sessionDate}>{fmtData(sess.criado_em)}</span>
                 </div>
                 <p style={s.sessionTitle}>
                   {tituloSessao(sess.resumo_sessao || sess.resumo_temas)}
                 </p>
+                {sess.ponto_retomada && (
+                  <p style={s.sessionRetomada}>↩ {sess.ponto_retomada}</p>
+                )}
               </div>
             ))
           )}
@@ -769,6 +807,7 @@ const s = {
   sessionItem: {
     padding: "10px 12px", borderRadius: "var(--radius-sm)",
     cursor: "default",
+    transition: "background var(--transition)",
   },
   sessionHeader: { display: "flex", alignItems: "center", gap: 6, marginBottom: 4 },
   badge: {
@@ -783,6 +822,12 @@ const s = {
     fontSize: 13, color: "var(--text)", lineHeight: 1.4, margin: 0,
     overflow: "hidden", textOverflow: "ellipsis",
     display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+  },
+  sessionRetomada: {
+    fontSize: 11, color: "var(--accent-purple)", margin: "4px 0 0",
+    lineHeight: 1.4, fontStyle: "italic",
+    overflow: "hidden", textOverflow: "ellipsis",
+    display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical",
   },
   sidebarFooter: {
     padding: "12px 16px",
