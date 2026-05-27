@@ -119,6 +119,7 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
   const [sessaoModal,  setSessaoModal]  = useState(null); // sessão selecionada
 
   const portaInjetadaRef = useRef(false);  // controla injeção única da porta
+  const [resumoFinal, setResumoFinal] = useState(null);  // resumo exibido no encerramento
     const bottomRef   = useRef(null);
   const textareaRef = useRef(null);  // BUG 5: foco no input
   const crisisRef   = useRef(0);
@@ -293,7 +294,10 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
           : "Sessão encerrada sem resumo gerado.";
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
+      // Guardar resumo para tela de encerramento
+      setResumoFinal(resumo);
+
+            const { data: { user } } = await supabase.auth.getUser();
       await supabase.from("conversas").insert({
         aluno_id:           aluno.id,
         escola_id:          aluno.escola_id,
@@ -655,17 +659,11 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
             </div>
           )}
 
-          {sessionEnded && !savingSession && (
-            <div style={s.endCard}>
-              
-              <p style={s.endTitle}>sessão encerrada</p>
-              <p style={s.endSub}>vou guardar essa conversa. quando você voltar, começo de onde a gente parou.</p>
-              <button onClick={novaConversa} style={s.btnPill}>nova conversa</button>
-            </div>
-          )}
-
           {savingSession && (
-            <p style={s.saving}>guardando sessão...</p>
+            <div style={s.savingWrap}>
+              <div style={s.savingOrb} />
+              <p style={s.saving}>guardando sua sessão...</p>
+            </div>
           )}
 
           <div ref={bottomRef} />
@@ -742,6 +740,15 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
         )}
       </main>
 
+      {/* ── Tela de encerramento ─────────────────────────────── */}
+      {sessionEnded && (
+        <TelaEncerramento
+          resumo={resumoFinal}
+          salvando={savingSession}
+          onNovaConversa={novaConversa}
+        />
+      )}
+
       <style>{`
         @keyframes fadeUp  { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
         @keyframes blink   { 0%,80%,100% { opacity:.2; transform:scale(.8) } 40% { opacity:1; transform:scale(1) } }
@@ -755,6 +762,164 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
     </div>
   );
 }
+
+// ─── Tela de Encerramento ────────────────────────────────────
+function TelaEncerramento({ resumo, salvando, onNovaConversa }) {
+  const temResumoReal = resumo?.resumo_sessao &&
+    !["sessão muito curta", "sessão encerrada"].some(g =>
+      resumo.resumo_sessao.toLowerCase().startsWith(g)
+    );
+
+  return (
+    <div style={te.overlay}>
+      <div style={te.container}>
+
+        {/* Orb com brilho */}
+        <div style={te.orbWrap}>
+          <div style={te.orbGlow} />
+          <div style={te.orb}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,.85)" strokeWidth="1.5"/>
+              <path d="M8 14s1-2 4-2 4 2 4 2" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+              <circle cx="9"  cy="10" r="1.2" fill="white"/>
+              <circle cx="15" cy="10" r="1.2" fill="white"/>
+            </svg>
+          </div>
+        </div>
+
+        {salvando ? (
+          <>
+            <p style={te.titulo}>guardando...</p>
+            <p style={te.sub}>processando o resumo da conversa</p>
+          </>
+        ) : (
+          <>
+            {/* Frase de fechamento */}
+            <p style={te.titulo}>foi bom conversar hoje.</p>
+            <p style={te.sub}>vou lembrar disso quando você voltar.</p>
+
+            {/* Card de resumo — só se tiver conteúdo real */}
+            {temResumoReal && (
+              <div style={te.card}>
+                <div style={te.cardRow}>
+                  <span style={te.cardLabel}>você trouxe</span>
+                  {resumo.construto_cortex && (
+                    <span style={te.badge}>{resumo.construto_cortex}</span>
+                  )}
+                </div>
+                <p style={te.cardTexto}>{resumo.resumo_sessao}</p>
+
+                {resumo.ponto_retomada && (
+                  <>
+                    <div style={{ ...te.cardRow, marginTop: 14 }}>
+                      <span style={te.cardLabel}>ficou em aberto</span>
+                    </div>
+                    <p style={{ ...te.cardTexto, color: "var(--accent-purple)" }}>
+                      {resumo.ponto_retomada}
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Botão único */}
+            <button onClick={onNovaConversa} style={te.btn}>
+              até logo
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Estilos da tela de encerramento
+const te = {
+  overlay: {
+    position: "fixed", inset: 0,
+    background: "var(--bg)",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    zIndex: 50,
+    padding: "0 24px",
+    animation: "fadeUp 0.5s ease",
+  },
+  container: {
+    display: "flex", flexDirection: "column",
+    alignItems: "center", gap: 16,
+    width: "100%", maxWidth: 380,
+    textAlign: "center",
+  },
+  orbWrap: {
+    position: "relative",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    marginBottom: 8,
+  },
+  orbGlow: {
+    position: "absolute",
+    width: 80, height: 80, borderRadius: "50%",
+    background: "radial-gradient(circle, rgba(200,166,255,0.3) 0%, transparent 70%)",
+    animation: "pulse 2.5s ease-in-out infinite",
+  },
+  orb: {
+    width: 64, height: 64, borderRadius: "50%",
+    background: "linear-gradient(135deg, var(--accent-purple), var(--accent-pink))",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    position: "relative",
+  },
+  titulo: {
+    fontFamily: "var(--font-display)",
+    fontSize: 22, fontWeight: 400,
+    color: "var(--text)", margin: 0,
+    lineHeight: 1.3,
+  },
+  sub: {
+    fontSize: 14, color: "var(--muted)",
+    margin: 0, fontFamily: "var(--font-body)",
+    lineHeight: 1.5,
+  },
+  card: {
+    width: "100%",
+    background: "var(--surface)",
+    border: "1px solid rgba(200,166,255,0.15)",
+    borderRadius: "var(--radius-sm)",
+    padding: "18px 20px",
+    textAlign: "left",
+    marginTop: 4,
+  },
+  cardRow: {
+    display: "flex", alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  cardLabel: {
+    fontSize: 10, color: "var(--muted)",
+    textTransform: "uppercase", letterSpacing: "0.08em",
+    fontFamily: "var(--font-body)",
+  },
+  badge: {
+    fontSize: 10, fontWeight: 700,
+    color: "var(--accent-purple)",
+    background: "rgba(200,166,255,0.12)",
+    borderRadius: 4, padding: "1px 6px",
+    letterSpacing: "0.04em",
+  },
+  cardTexto: {
+    fontSize: 14, color: "var(--text)",
+    lineHeight: 1.65, margin: 0,
+    fontFamily: "var(--font-body)",
+  },
+  btn: {
+    marginTop: 8,
+    padding: "13px 40px",
+    borderRadius: 50, border: "none",
+    background: "linear-gradient(135deg, var(--accent-purple), var(--accent-pink))",
+    color: "#0E0D14", fontSize: 15, fontWeight: 600,
+    fontFamily: "var(--font-body)",
+    cursor: "pointer",
+    transition: "opacity 0.2s",
+    letterSpacing: "0.02em",
+  },
+};
 
 // ─── Sub-componentes ──────────────────────────────────────────
 function MessageBubble({ msg, isUser }) {
@@ -1012,6 +1177,15 @@ const s = {
   endTitle: { margin: 0, fontSize: 16, fontWeight: 600, color: "var(--text)" },
   endSub:   { margin: 0, fontSize: 13, color: "var(--muted)", lineHeight: 1.5 },
   saving:   { textAlign: "center", fontSize: 12, color: "var(--muted)", animation: "pulse 1.2s infinite" },
+  savingWrap: {
+    display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+    padding: "20px 0", animation: "fadeUp .3s ease",
+  },
+  savingOrb: {
+    width: 10, height: 10, borderRadius: "50%",
+    background: "var(--accent-purple)",
+    animation: "pulse 1.2s ease-in-out infinite",
+  },
 
   humorCard: {
     margin: "0 12px 8px", background: "var(--surface)",
