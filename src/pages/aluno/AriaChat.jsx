@@ -862,7 +862,8 @@ const te = {
   },
   orb: {
     width: 64, height: 64, borderRadius: "50%",
-    background: "var(--aria-action)",
+    background: "radial-gradient(circle at 35% 35%, var(--orb-purple) 0%, var(--orb-pink) 45%, var(--orb-blue) 75%, var(--orb-gold) 100%)",
+    boxShadow: "var(--shadow-orb)",
     display: "flex", alignItems: "center", justifyContent: "center",
     position: "relative",
   },
@@ -941,7 +942,8 @@ function ARIAOrb({ size = 36, pulse = false }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%",
-      background: "var(--aria-action)",
+      background: "radial-gradient(circle at 35% 35%, var(--orb-purple) 0%, var(--orb-pink) 45%, var(--orb-blue) 75%, var(--orb-gold) 100%)",
+      boxShadow: "var(--shadow-orb)",
       display: "flex", alignItems: "center", justifyContent: "center",
       flexShrink: 0,
       animation: pulse ? "orbGlow 2s ease-in-out infinite" : "none",
