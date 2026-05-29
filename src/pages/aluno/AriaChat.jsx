@@ -465,7 +465,7 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
 
   if (error) return (
     <div style={s.loadScreen}>
-      <p style={{ color: "var(--error)", fontSize: 14, fontFamily: "var(--font-body)" }}>{error}</p>
+      <p style={{ color: "var(--error)", fontSize: 14, }}>{error}</p>
       <button onClick={() => window.location.reload()} style={s.btnPill}>recarregar</button>
     </div>
   );
@@ -862,20 +862,19 @@ const te = {
   },
   orb: {
     width: 64, height: 64, borderRadius: "50%",
-    background: "radial-gradient(circle at 35% 35%, var(--orb-purple) 0%, var(--orb-pink) 45%, var(--orb-blue) 75%, var(--orb-gold) 100%)",
-    boxShadow: "var(--shadow-orb)",
+    background: "var(--aria-action)",
     display: "flex", alignItems: "center", justifyContent: "center",
     position: "relative",
   },
   titulo: {
-    fontFamily: "var(--font-display)",
+    
     fontSize: 22, fontWeight: 400,
     color: "var(--text)", margin: 0,
     lineHeight: 1.3,
   },
   sub: {
     fontSize: 14, color: "var(--muted)",
-    margin: 0, fontFamily: "var(--font-body)",
+    margin: 0, 
     lineHeight: 1.5,
   },
   card: {
@@ -895,7 +894,7 @@ const te = {
   cardLabel: {
     fontSize: 10, color: "var(--muted)",
     textTransform: "uppercase", letterSpacing: "0.08em",
-    fontFamily: "var(--font-body)",
+    
   },
   badge: {
     fontSize: 10, fontWeight: 700,
@@ -907,7 +906,7 @@ const te = {
   cardTexto: {
     fontSize: 14, color: "var(--text)",
     lineHeight: 1.65, margin: 0,
-    fontFamily: "var(--font-body)",
+    
   },
   btn: {
     marginTop: 8,
@@ -915,7 +914,7 @@ const te = {
     borderRadius: 50, border: "none",
     background: "var(--aria-action)",
     color: "var(--aria-action-text)", fontSize: 15, fontWeight: 600,
-    fontFamily: "var(--font-body)",
+    
     cursor: "pointer",
     transition: "opacity 0.2s",
     letterSpacing: "0.02em",
@@ -942,10 +941,10 @@ function ARIAOrb({ size = 36, pulse = false }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%",
-      background: "radial-gradient(circle at 35% 35%, var(--orb-purple) 0%, var(--orb-pink) 45%, var(--orb-blue) 75%, var(--orb-gold) 100%)",
-      boxShadow: "var(--shadow-orb)",
+      background: "linear-gradient(135deg, var(--orb-purple), var(--orb-pink))",
       display: "flex", alignItems: "center", justifyContent: "center",
       flexShrink: 0,
+      boxShadow: "var(--shadow-orb)",
       animation: pulse ? "orbGlow 2s ease-in-out infinite" : "none",
     }}>
       <svg width={size * .5} height={size * .5} viewBox="0 0 24 24" fill="none">
@@ -990,7 +989,7 @@ function IconSair() {
 function IconSend({ active }) {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-      stroke={active ? "#0E0D14" : "var(--muted)"} strokeWidth="2.5" strokeLinecap="round">
+      stroke={active ? "var(--aria-action-text)" : "var(--muted)"} strokeWidth="2.5" strokeLinecap="round">
       <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" />
     </svg>
   );
@@ -1001,14 +1000,14 @@ const s = {
   shell: {
     display: "flex", height: "100dvh", overflow: "hidden",
     background: "var(--bg)", color: "var(--text)",
-    fontFamily: "var(--font-body)", position: "relative",
+     position: "relative",
   },
   loadScreen: {
     display: "flex", flexDirection: "column", alignItems: "center",
     justifyContent: "center", gap: 16,
     height: "100dvh", background: "var(--bg)",
   },
-  loadText: { color: "var(--muted)", fontSize: 13, fontFamily: "var(--font-body)" },
+  loadText: { color: "var(--muted)", fontSize: 13, },
 
   // BUG 3: overlay com z-index alto e pointer-events corretos
   overlay: {
@@ -1036,7 +1035,7 @@ const s = {
   },
   sidebarBrand: { display: "flex", alignItems: "center", gap: 10 },
   brandName: {
-    fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600,
+    fontSize: 18, fontWeight: 600,
     color: "var(--aria-action)", letterSpacing: "0.04em",
   },
   sessionList: {
@@ -1127,18 +1126,18 @@ const s = {
   },
   headerName: {
     margin: 0, fontSize: 15, fontWeight: 600,
-    color: "var(--aria-action)", fontFamily: "var(--font-display)",
+    color: "var(--aria-action)", 
     letterSpacing: "0.04em",
   },
   onlineRow: { display: "flex", alignItems: "center", gap: 5 },
-  onlineDot: { width: 7, height: 7, borderRadius: "50%", background: "#4ade80", animation: "pulse 2s ease-in-out infinite" },
-  onlineText: { fontSize: 11, color: "#4ade80", letterSpacing: "0.04em" },
+  onlineDot: { width: 7, height: 7, borderRadius: "50%", background: "var(--success)", animation: "pulse 2s ease-in-out infinite" },
+  onlineText: { fontSize: 11, color: "var(--success)", letterSpacing: "0.04em" },
   headerRight: { display: "flex", alignItems: "center", gap: 8, minWidth: 80, justifyContent: "flex-end" },
   btnEncerrar: {
     background: "none", border: "1px solid var(--border-strong)",
     borderRadius: 20, padding: "4px 12px",
     fontSize: 12, color: "var(--muted)", cursor: "pointer",
-    fontFamily: "var(--font-body)",
+    
   },
 
   progressTrack: { height: 2, background: "var(--border)", flexShrink: 0 },
@@ -1162,7 +1161,7 @@ const s = {
   bubbleText: {
     margin: 0, fontSize: 15, lineHeight: 1.65,
     whiteSpace: "pre-wrap", wordBreak: "break-word",
-    fontFamily: "var(--font-body)",
+    
   },
   dot: {
     width: 7, height: 7, borderRadius: "50%",
@@ -1222,7 +1221,7 @@ const s = {
   textarea: {
     flex: 1, background: "none", border: "none", outline: "none",
     resize: "none", fontSize: 15, lineHeight: 1.5,
-    color: "var(--text)", fontFamily: "var(--font-body)",
+    color: "var(--text)", 
     minHeight: 24, maxHeight: 120, overflowY: "auto", padding: 0,
   },
   btnSend: {
@@ -1238,7 +1237,7 @@ const s = {
     padding: "12px 28px", borderRadius: 50, border: "none", cursor: "pointer",
     background: "var(--aria-action)",
     color: "var(--aria-action-text)", fontSize: 14, fontWeight: 600,
-    fontFamily: "var(--font-body)", transition: "opacity 0.2s",
+     transition: "opacity 0.2s",
   },
 
   // Modal de resumo
@@ -1276,12 +1275,12 @@ const s = {
   modalLabel: {
     fontSize: 11, color: "var(--muted)",
     textTransform: "uppercase", letterSpacing: "0.08em",
-    fontFamily: "var(--font-body)", marginBottom: 8,
+     marginBottom: 8,
   },
   modalText: {
     fontSize: 14, color: "var(--text)",
     lineHeight: 1.65, margin: 0,
-    fontFamily: "var(--font-body)",
+    
   },
   modalFooter: {
     display: "flex", alignItems: "center",

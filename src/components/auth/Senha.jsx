@@ -39,7 +39,7 @@ export function RecuperarSenha() {
 
         <div style={{ marginBottom: '28px' }}>
           <h1 style={{ fontSize: '20px', marginBottom: '6px' }}>Recuperar senha</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+          <p style={{ color: 'var(--text-2)', fontSize: '14px' }}>
             Informe seu e-mail e enviaremos um link para criar uma nova senha
           </p>
         </div>
@@ -66,8 +66,8 @@ export function RecuperarSenha() {
           </form>
         )}
 
-        <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-          <Link to="/login" style={{ color: 'var(--accent-primary)' }}>Voltar para o login</Link>
+        <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: 'var(--text-2)' }}>
+          <Link to="/login" style={{ color: 'var(--aria-action)' }}>Voltar para o login</Link>
         </p>
       </div>
     </div>
@@ -120,7 +120,7 @@ export function NovaSenha() {
 
         <div style={{ marginBottom: '28px' }}>
           <h1 style={{ fontSize: '20px', marginBottom: '6px' }}>Nova senha</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+          <p style={{ color: 'var(--text-2)', fontSize: '14px' }}>
             Crie uma senha nova para sua conta
           </p>
         </div>
@@ -163,16 +163,16 @@ function Logo() {
     <div style={{ marginBottom: '36px', display: 'flex', alignItems: 'center', gap: '10px' }}>
       <div style={{
         width: '36px', height: '36px',
-        background: 'var(--accent-primary)',
+        background: 'var(--aria-action)',
         borderRadius: '10px',
         display: 'flex', alignItems: 'center', justifyContent: 'center'
       }}>
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
           <path d="M10 2C10 2 4 5 4 10.5C4 14 6.5 17 10 17C13.5 17 16 14 16 10.5C16 5 10 2 10 2Z" fill="white" fillOpacity="0.9"/>
-          <circle cx="10" cy="10.5" r="2.5" fill="var(--accent-primary)"/>
+          <circle cx="10" cy="10.5" r="2.5" fill="var(--aria-action)"/>
         </svg>
       </div>
-      <span style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: '600', letterSpacing: '-0.02em' }}>
+      <span style={{ fontFamily: 'var(--font)', fontSize: '20px', fontWeight: '600', letterSpacing: '-0.02em' }}>
         SISME
       </span>
     </div>
@@ -191,7 +191,7 @@ const pageStyle = {
 const cardStyle = {
   width: '100%',
   maxWidth: '400px',
-  background: 'var(--bg-card)',
+  background: 'var(--surface)',
   borderRadius: 'var(--radius-lg)',
   padding: '36px 32px',
   border: '1px solid var(--border)'

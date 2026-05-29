@@ -124,8 +124,8 @@ export default function Cadastro() {
               </p>
             </div>
           </Alert>
-          <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-            <Link to="/login" style={{ color: 'var(--accent-primary)' }}>Voltar para o login</Link>
+          <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: 'var(--text-2)' }}>
+            <Link to="/login" style={{ color: 'var(--aria-action)' }}>Voltar para o login</Link>
           </p>
         </div>
       </div>
@@ -140,7 +140,7 @@ export default function Cadastro() {
 
         <div style={{ marginBottom: '28px' }}>
           <h1 style={{ fontSize: '20px', marginBottom: '4px' }}>{TITLES[step]}</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>{SUBTITLES[step]}</p>
+          <p style={{ color: 'var(--text-2)', fontSize: '14px' }}>{SUBTITLES[step]}</p>
         </div>
 
         {globalError && (
@@ -237,9 +237,9 @@ export default function Cadastro() {
           </div>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: '28px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+        <p style={{ textAlign: 'center', marginTop: '28px', fontSize: '14px', color: 'var(--text-2)' }}>
           Já tem conta?{' '}
-          <Link to="/login" style={{ color: 'var(--accent-primary)', fontWeight: '500' }}>
+          <Link to="/login" style={{ color: 'var(--aria-action)', fontWeight: '500' }}>
             Entrar
           </Link>
         </p>
@@ -254,7 +254,7 @@ function StepIndicator({ step, total }) {
       {Array.from({ length: total }).map((_, i) => (
         <div key={i} style={{
           height: '3px', flex: 1, borderRadius: '2px',
-          background: i <= step ? 'var(--accent-primary)' : 'var(--border)',
+          background: i <= step ? 'var(--aria-action)' : 'var(--border)',
           transition: 'background 0.3s'
         }} />
       ))}
@@ -266,15 +266,15 @@ function Logo() {
   return (
     <div style={{ marginBottom: '36px', display: 'flex', alignItems: 'center', gap: '10px' }}>
       <div style={{
-        width: '36px', height: '36px', background: 'var(--accent-primary)',
+        width: '36px', height: '36px', background: 'var(--aria-action)',
         borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center'
       }}>
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
           <path d="M10 2C10 2 4 5 4 10.5C4 14 6.5 17 10 17C13.5 17 16 14 16 10.5C16 5 10 2 10 2Z" fill="white" fillOpacity="0.9"/>
-          <circle cx="10" cy="10.5" r="2.5" fill="var(--accent-primary)"/>
+          <circle cx="10" cy="10.5" r="2.5" fill="var(--aria-action)"/>
         </svg>
       </div>
-      <span style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: '600', letterSpacing: '-0.02em' }}>
+      <span style={{ fontFamily: 'var(--font)', fontSize: '20px', fontWeight: '600', letterSpacing: '-0.02em' }}>
         SISME
       </span>
     </div>
@@ -288,6 +288,6 @@ const pageStyle = {
 }
 
 const cardStyle = {
-  width: '100%', maxWidth: '400px', background: 'var(--bg-card)',
+  width: '100%', maxWidth: '400px', background: 'var(--surface)',
   borderRadius: 'var(--radius-lg)', padding: '36px 32px', border: '1px solid var(--border)'
 }

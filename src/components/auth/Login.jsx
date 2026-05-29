@@ -40,18 +40,18 @@ export default function Login() {
       <div style={cardStyle}>
         <Logo />
 
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '22px', marginBottom: '6px', fontWeight: 700, color: 'var(--text)' }}>
-            bem-vindo de volta
+        <div style={{ marginBottom: 'var(--space-8)' }}>
+          <h1 style={{ fontSize: '22px', marginBottom: '6px', color: 'var(--text)' }}>
+            Bem-vindo de volta
           </h1>
           <p style={{ color: 'var(--text-2)', fontSize: '14px' }}>
-            entre com sua conta para continuar
+            Entre com sua conta para continuar
           </p>
         </div>
 
-        {error && <Alert type="error" style={{ marginBottom: '20px' }}>{error}</Alert>}
+        {error && <Alert type="error" style={{ marginBottom: 'var(--space-5)' }}>{error}</Alert>}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
           <Input
             label="E-mail"
             type="email"
@@ -74,21 +74,21 @@ export default function Login() {
           <div style={{ textAlign: 'right', marginTop: '-8px' }}>
             <Link
               to="/recuperar-senha"
-              style={{ fontSize: '13px', color: 'var(--muted)' }}
+              style={{ fontSize: '13px', color: 'var(--text-2)' }}
             >
-              esqueci minha senha
+              Esqueci minha senha
             </Link>
           </div>
 
-          <Button onClick={handleSubmit} fullWidth loading={loading} style={{ marginTop: '8px' }}>
-            entrar
+          <Button type="submit" fullWidth loading={loading} style={{ marginTop: 'var(--space-2)' }}>
+            Entrar
           </Button>
-        </div>
+        </form>
 
-        <p style={{ textAlign: 'center', marginTop: '28px', fontSize: '14px', color: 'var(--text-2)' }}>
-          primeira vez aqui?{' '}
+        <p style={{ textAlign: 'center', marginTop: 'var(--space-6)', fontSize: '14px', color: 'var(--text-2)' }}>
+          Primeira vez aqui?{' '}
           <Link to="/cadastro" style={{ color: 'var(--aria-action)', fontWeight: '600' }}>
-            criar conta
+            Criar conta
           </Link>
         </p>
       </div>
@@ -98,23 +98,20 @@ export default function Login() {
 
 function Logo() {
   return (
-    <div style={{ marginBottom: '40px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-      {/* Orb da ARIA — gradiente multicolor */}
+    <div style={{ marginBottom: 'var(--space-10)', display: 'flex', alignItems: 'center', gap: '10px' }}>
       <div style={{
-        width: '40px', height: '40px',
-        borderRadius: '50%',
-        background: 'radial-gradient(circle at 35% 35%, #C8A6FF 0%, #FF9FCB 45%, #9FDFFF 75%, #FFD580 100%)',
-        boxShadow: '0 0 20px rgba(200,166,255,0.4), 0 0 40px rgba(255,159,203,0.15)',
-        flexShrink: 0,
-      }} />
-      <span style={{
-        fontFamily: 'var(--font-display)',
-        fontSize: '20px',
-        fontWeight: '700',
-        letterSpacing: '0.06em',
-        color: 'var(--text)',
+        width: '36px', height: '36px',
+        background: 'var(--aria-action)',
+        borderRadius: 'var(--radius-sm)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center'
       }}>
-        ARIA
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M10 2C10 2 4 5 4 10.5C4 14 6.5 17 10 17C13.5 17 16 14 16 10.5C16 5 10 2 10 2Z" fill="white" fillOpacity="0.9"/>
+          <circle cx="10" cy="10.5" r="2.5" fill="var(--aria-action)"/>
+        </svg>
+      </div>
+      <span style={{ fontSize: '20px', fontWeight: '600', letterSpacing: '-0.02em', color: 'var(--text)' }}>
+        SISME
       </span>
     </div>
   )
@@ -125,8 +122,8 @@ const pageStyle = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: '24px 20px',
-  background: 'var(--bg)',
+  padding: 'var(--space-6) var(--space-5)',
+  background: 'var(--bg)'
 }
 
 const cardStyle = {
@@ -136,5 +133,5 @@ const cardStyle = {
   borderRadius: 'var(--radius-lg)',
   padding: '36px 32px',
   border: '1px solid var(--border)',
-  boxShadow: 'var(--shadow-md)',
+  boxShadow: 'var(--shadow-md)'
 }

@@ -259,7 +259,7 @@ function ARIAOrbGrande() {
       }} />
       <div style={{
         width: 96, height: 96, borderRadius: '50%',
-        background: 'radial-gradient(circle at 35% 35%, var(--orb-purple) 0%, var(--orb-pink) 45%, var(--orb-blue) 75%, var(--orb-gold) 100%)',
+        background: 'linear-gradient(135deg, var(--orb-purple), var(--orb-pink))',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         boxShadow: 'var(--shadow-orb)',
       }}>

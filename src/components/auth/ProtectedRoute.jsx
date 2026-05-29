@@ -18,7 +18,7 @@ export default function ProtectedRoute({ children }) {
         <div style={{
           width: '36px', height: '36px',
           border: '2px solid var(--border)',
-          borderTopColor: 'var(--accent-primary)',
+          borderTopColor: 'var(--aria-action)',
           borderRadius: '50%',
           animation: 'spin 0.8s linear infinite'
         }} />

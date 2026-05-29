@@ -5,8 +5,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  /* Tipografia única — sem exceção */
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-family: var(--font);
 }
 
 html {
@@ -33,7 +32,6 @@ body {
   background-color: var(--bg);
 }
 
-/* Sem h1–h4 com font-family diferente — Plus Jakarta Sans em tudo */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   line-height: 1.25;
@@ -43,10 +41,12 @@ button {
   cursor: pointer;
   border: none;
   background: none;
+  font-family: var(--font);
 }
 
 input, textarea, select {
   font-size: 16px;
+  font-family: var(--font);
 }
 
 a { color: var(--aria-action); text-decoration: none; }
@@ -101,21 +101,3 @@ input:-webkit-autofill:focus {
 /* Safe area utilities */
 .safe-top    { padding-top: env(safe-area-inset-top); }
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-
-/* Aliases legados para componentes de auth */
-:root {
-  --bg-card:        var(--surface);
-  --bg-elevated:    var(--elevated);
-  --border-focus:   var(--aria-action);
-  --text-primary:   var(--text);
-  --text-secondary: var(--text-2);
-  --text-muted:     var(--muted);
-  --radius-md:      var(--radius-md);
-}
-
-[data-theme="dark"] {
-  --bg-card:        var(--surface);
-  --bg-input:       var(--surface);
-  --text-primary:   var(--text);
-  --text-secondary: var(--text-2);
-}

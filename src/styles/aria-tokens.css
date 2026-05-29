@@ -2,26 +2,31 @@
    ARIA — Design Tokens v2.0
    Fonte única de todas as variáveis CSS do projeto.
    Importado por: src/styles/global.css
+   REGRAS INEGOCIÁVEIS:
+   - --orb-* SOMENTE no gradiente do orb da ARIA
+   - --aria-action em botões, bordas de foco, textos de ação
+   - --aria-action-text em textos sobre botões primários
+   - Sem valores hex hardcoded nos componentes
 ───────────────────────────────────────────────────────────── */
 
 :root {
-  /* Ação — cor principal de botões e interações */
+  /* Ação — botões primários, bordas de foco, textos de ação */
   --aria-action:        #6B5CE7;
   --aria-action-hover:  #5A4BD6;
   --aria-action-subtle: rgba(107,92,231,0.12);
   --aria-action-text:   #FFFFFF;
 
-  /* Orb — exclusivo para gradientes do orb da ARIA */
+  /* Orb — EXCLUSIVO para o gradiente do orb da ARIA */
   --orb-purple: #C8A6FF;
   --orb-pink:   #FF9FCB;
   --orb-blue:   #9FDFFF;
   --orb-gold:   #FFD580;
 
-  /* Backgrounds */
-  --bg:       #F7F6F3;
-  --surface:  #FFFFFF;
+  /* Superfícies */
+  --bg:        #F7F6F3;
+  --surface:   #FFFFFF;
   --surface-2: #F0EFEC;
-  --elevated: #FFFFFF;
+  --elevated:  #FFFFFF;
 
   /* Texto */
   --text:   #18171C;
@@ -29,9 +34,9 @@
   --muted:  #9490A8;
 
   /* Bordas */
-  --border:       rgba(24,23,28,0.09);
+  --border:        rgba(24,23,28,0.09);
   --border-strong: rgba(24,23,28,0.18);
-  --border-focus: var(--aria-action);
+  --border-focus:  var(--aria-action);
 
   /* Semânticas */
   --success:    #2DB87D;
@@ -48,9 +53,15 @@
   --shadow-orb: 0 0 60px rgba(200,166,255,0.35), 0 0 120px rgba(255,159,203,0.15);
 
   /* Espaçamentos */
-  --space-1: 4px;  --space-2: 8px;   --space-3: 12px;
-  --space-4: 16px; --space-5: 20px;  --space-6: 24px;
-  --space-8: 32px; --space-10: 40px; --space-12: 48px;
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
 
   /* Raios */
   --radius-xs:   6px;
@@ -64,52 +75,19 @@
   --transition-base: 0.25s ease;
   --transition-slow: 0.40s ease;
 
-  /* Aliases de compatibilidade com código existente */
-  --accent-purple:  var(--orb-purple);
-  --accent-pink:    var(--orb-pink);
-  --accent-blue:    var(--orb-blue);
-  --accent-gold:    var(--orb-gold);
-  --accent-primary: var(--aria-action);
-  --accent-danger:  var(--error);
-  --accent-success: var(--success);
-  --bg-card:        var(--surface);
-  --bg-input:       var(--surface);
-  --bg-elevated:    var(--elevated);
-  --radius:         var(--radius-lg);
-  --transition:     var(--transition-base);
-
-  /* Tipografia — Plus Jakarta Sans única */
-  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
-  --font-body:    'Plus Jakarta Sans', system-ui, sans-serif;
+  /* Tipografia */
+  --font: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
-/* ── Tema ESCURO ─────────────────────────────────────────────── */
+/* ── Tema escuro ─────────────────────────────────────────────── */
 [data-theme="dark"] {
-  --bg:           #0F0E14;
-  --surface:      #18161F;
-  --surface-2:    #201D29;
-  --elevated:     #231F2E;
-  --text:         #F0EEF8;
-  --text-2:       #B8B4CC;
-  --muted:        #7A7690;
-  --border:       rgba(240,238,248,0.08);
+  --bg:            #0F0E14;
+  --surface:       #18161F;
+  --surface-2:     #201D29;
+  --elevated:      #231F2E;
+  --text:          #F0EEF8;
+  --text-2:        #B8B4CC;
+  --muted:         #7A7690;
+  --border:        rgba(240,238,248,0.08);
   --border-strong: rgba(240,238,248,0.15);
-
-  /* Aliases dark */
-  --bg-card:   var(--surface);
-  --bg-input:  var(--surface);
-  --bg-elevated: var(--elevated);
-}
-
-/* ── Aplicação direta no html/body ──────────────────────────── */
-html, body {
-  background-color: var(--bg);
-  font-family: var(--font-body);
-}
-
-[data-theme="dark"] html,
-[data-theme="dark"] body,
-html[data-theme="dark"],
-body[data-theme="dark"] {
-  background-color: #0F0E14;
 }
