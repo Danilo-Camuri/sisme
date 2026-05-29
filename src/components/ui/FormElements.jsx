@@ -11,7 +11,7 @@ const styles = {
   label: {
     fontSize: '13px',
     fontWeight: '500',
-    color: 'var(--text-secondary)',
+    color: 'var(--text-2)',
     letterSpacing: '0.02em'
   },
   inputWrap: {
@@ -21,22 +21,23 @@ const styles = {
   },
   input: {
     width: '100%',
-    background: 'var(--bg-input)',
+    background: 'var(--surface)',
     border: '1px solid var(--border)',
     borderRadius: 'var(--radius-sm)',
     padding: '14px 16px',
     fontSize: '16px',
-    color: 'var(--text-primary)',
+    color: 'var(--text)',
     outline: 'none',
     transition: 'border-color 0.2s',
-    WebkitAppearance: 'none'
+    WebkitAppearance: 'none',
+    fontFamily: 'var(--font-body)',
   },
   eyeBtn: {
     position: 'absolute',
     right: '14px',
     background: 'none',
     border: 'none',
-    color: 'var(--text-muted)',
+    color: 'var(--muted)',
     cursor: 'pointer',
     padding: '4px',
     display: 'flex',
@@ -44,7 +45,7 @@ const styles = {
   },
   fieldError: {
     fontSize: '12px',
-    color: 'var(--accent-danger)',
+    color: 'var(--error)',
     display: 'flex',
     alignItems: 'center',
     gap: '4px'
@@ -64,11 +65,11 @@ export function Input({ label, type = 'text', error, hint, ...props }) {
           type={inputType}
           style={{
             ...styles.input,
-            borderColor: error ? 'var(--accent-danger)' : undefined,
+            borderColor: error ? 'var(--error)' : undefined,
             paddingRight: isPassword ? '48px' : undefined
           }}
           onFocus={e => e.target.style.borderColor = 'var(--border-focus)'}
-          onBlur={e => e.target.style.borderColor = error ? 'var(--accent-danger)' : 'var(--border)'}
+          onBlur={e => e.target.style.borderColor = error ? 'var(--error)' : 'var(--border)'}
           autoCapitalize={type === 'email' || type === 'password' ? 'none' : undefined}
           autoCorrect="off"
           spellCheck={false}
@@ -91,7 +92,7 @@ export function Input({ label, type = 'text', error, hint, ...props }) {
         </span>
       )}
       {hint && !error && (
-        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{hint}</span>
+        <span style={{ fontSize: '12px', color: 'var(--muted)', fontFamily: 'var(--font-body)' }}>{hint}</span>
       )}
     </div>
   )
@@ -104,39 +105,40 @@ export function Button({ children, variant = 'primary', loading, fullWidth, ...p
     justifyContent: 'center',
     gap: '8px',
     padding: '14px 24px',
-    borderRadius: 'var(--radius-sm)',
+    borderRadius: 'var(--radius-full)',
     fontSize: '15px',
-    fontWeight: '500',
+    fontWeight: '600',
     fontFamily: 'var(--font-body)',
     transition: 'opacity 0.15s, transform 0.1s',
     width: fullWidth ? '100%' : undefined,
     cursor: props.disabled || loading ? 'not-allowed' : 'pointer',
-    opacity: props.disabled || loading ? 0.6 : 1
+    opacity: props.disabled || loading ? 0.6 : 1,
+    minHeight: '44px',
   }
 
   const variants = {
     primary: {
-      background: 'var(--accent-primary)',
-      color: '#0E0D14',
+      background: 'var(--aria-action)',
+      color: 'var(--aria-action-text)',
       border: 'none'
     },
     ghost: {
       background: 'transparent',
-      color: 'var(--text-secondary)',
+      color: 'var(--text-2)',
       border: '1px solid var(--border)'
     },
     danger: {
       background: 'transparent',
-      color: 'var(--accent-danger)',
-      border: '1px solid var(--accent-danger)'
+      color: 'var(--error)',
+      border: '1px solid var(--error)'
     }
   }
 
   return (
     <button
       style={{ ...base, ...variants[variant] }}
-      onMouseEnter={e => { if (!props.disabled && !loading) e.target.style.opacity = '0.85' }}
-      onMouseLeave={e => { if (!props.disabled && !loading) e.target.style.opacity = '1' }}
+      onMouseEnter={e => { if (!props.disabled && !loading) e.currentTarget.style.opacity = '0.85' }}
+      onMouseLeave={e => { if (!props.disabled && !loading) e.currentTarget.style.opacity = '1' }}
       onMouseDown={e => { if (!props.disabled && !loading) e.currentTarget.style.transform = 'scale(0.98)' }}
       onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
       disabled={props.disabled || loading}
@@ -151,9 +153,9 @@ export function Button({ children, variant = 'primary', loading, fullWidth, ...p
 
 export function Alert({ type = 'error', children }) {
   const colors = {
-    error: { bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.3)', color: '#fca5a5' },
-    success: { bg: 'rgba(74,222,128,0.1)', border: 'rgba(74,222,128,0.3)', color: '#86efac' },
-    info: { bg: 'rgba(124,106,247,0.1)', border: 'rgba(124,106,247,0.3)', color: '#a5b4fc' }
+    error:   { bg: 'var(--error-bg)',   border: 'var(--error)',   color: 'var(--error)'   },
+    success: { bg: 'var(--success-bg)', border: 'var(--success)', color: 'var(--success)' },
+    info:    { bg: 'var(--aria-action-subtle)', border: 'var(--aria-action)', color: 'var(--aria-action)' }
   }
   const c = colors[type]
 
@@ -168,9 +170,10 @@ export function Alert({ type = 'error', children }) {
       border: `1px solid ${c.border}`,
       color: c.color,
       fontSize: '14px',
-      lineHeight: '1.5'
+      lineHeight: '1.5',
+      fontFamily: 'var(--font-body)',
     }}>
-      {type === 'error' && <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '1px' }} />}
+      {type === 'error'   && <AlertCircle  size={16} style={{ flexShrink: 0, marginTop: '1px' }} />}
       {type === 'success' && <CheckCircle2 size={16} style={{ flexShrink: 0, marginTop: '1px' }} />}
       {children}
     </div>
