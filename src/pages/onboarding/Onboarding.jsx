@@ -254,7 +254,7 @@ function ARIAOrbGrande() {
     <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{
         position: 'absolute', width: 120, height: 120, borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(200,166,255,0.25) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, var(--aria-action-subtle) 0%, transparent 70%)',
         animation: 'orbPulse 3s ease-in-out infinite',
       }} />
       <div style={{
