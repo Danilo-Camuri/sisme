@@ -1,32 +1,33 @@
 import { useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 
-// ─── Ícones SVG — spec: viewBox 0 0 24 24, stroke currentColor,
-//     strokeWidth 1.5, strokeLinecap round, strokeLinejoin round, fill none
-//     Tamanho renderizado 28x28. Área de toque 44x44.
-//     "Não estou bem": cor de repouso var(--orb-pink), hover var(--error)
+// ─── Ícones SVG fiéis ao design do cofundador
+//     viewBox 0 0 24 24 | stroke currentColor | strokeWidth 1.5
+//     strokeLinecap round | strokeLinejoin round | fill none
+//     Tamanho renderizado 28x28 | Área de toque 44x44
+//     "Não estou bem": stroke recebe cor como prop (orb-pink em repouso, error em hover)
 
+// Escola — livro aberto com dobra no canto inferior direito
 const IcoEscola = () => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M2 19V8l10-5 10 5v11" />
-    <path d="M6 19v-7h12v7" />
-    <path d="M10 19v-4h4v4" />
-    <path d="M18 14h.01" />
-    {/* Dobra no canto inferior direito do livro */}
-    <path d="M2 8h20" />
+    <path d="M2 6.5C2 6.5 7 5 12 5s10 1.5 10 1.5V20s-5-1.5-10-1.5S2 20 2 20V6.5z" />
+    <path d="M12 5v13.5" />
+    <path d="M18.5 18.5L20 20" />
   </svg>
 );
 
+// Família — telhado triangular com chaminé e base horizontal
 const IcoFamilia = () => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 12L12 3l9 9" />
-    <path d="M5 10v9a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-9" />
-    <path d="M15 3h3v4" />
+    <path d="M2 20h20" />
+    <path d="M4 20L12 6l8 14" />
+    <rect x="15" y="9" width="3" height="5" />
   </svg>
 );
 
+// Amizades — dois círculos sobrepostos estilo Venn
 const IcoAmizades = () => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -35,29 +36,30 @@ const IcoAmizades = () => (
   </svg>
 );
 
+// Meu futuro — círculo com agulha diamante diagonal
 const IcoFuturo = () => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="9" />
-    <path d="M16.24 7.76l-4.95 4.95" />
-    <path d="M16.24 7.76H11.5M16.24 7.76V12.5" />
+    <circle cx="12" cy="12" r="9.5" />
+    <path d="M7.5 16.5L12 8l4.5 8.5" />
+    <path d="M7.5 16.5L16.5 7.5" />
   </svg>
 );
 
-// Único ícone com cor de repouso diferente — recebe cor como prop
+// Não estou bem — linha ondulada horizontal (stroke via prop para cor diferente)
 const IcoNaoEstouBem = ({ cor }) => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
     stroke={cor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 12 C5 9, 7 15, 9 12 S13 9, 15 12 S19 15, 21 12" />
+    <path d="M2 12 C4 8.5, 6 15.5, 8 12 C10 8.5, 12 15.5, 14 12 C16 8.5, 18 15.5, 20 12" />
   </svg>
 );
 
+// Só quero conversar — três pontos preenchidos centralizados
 const IcoConversar = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"
-    strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="8" cy="12" r="1.5" />
-    <circle cx="12" cy="12" r="1.5" />
-    <circle cx="16" cy="12" r="1.5" />
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+    <circle cx="7"  cy="12" r="2" />
+    <circle cx="12" cy="12" r="2" />
+    <circle cx="17" cy="12" r="2" />
   </svg>
 );
 
