@@ -9,13 +9,11 @@ import {
   montarBlocoMemoria,
 } from "./systemPrompts";
 
-// ─── Constantes ───────────────────────────────────────────────
-const MODEL      = "claude-haiku-4-5-20251001";  // Revertido: sonnet-4-20250514 não existe, usar haiku confirmado
+const MODEL      = "claude-haiku-4-5-20251001";
 const MAX_TOKENS = 600;
-const MAX_TROCAS = 15;   // BUG 2: resumo gerado a cada 15 trocas
-const MAX_HIST   = 5;   // Etapa 2: últimas 5 sessões para memória longitudinal
+const MAX_TROCAS = 15;
+const MAX_HIST   = 5;
 
-// ─── Helpers ──────────────────────────────────────────────────
 function fmtData(iso) {
   if (!iso) return "";
   const d    = new Date(iso);
@@ -29,8 +27,6 @@ function fmtData(iso) {
 
 function tituloSessao(resumo) {
   if (!resumo) return "sessão sem título";
-
-  // Limpar JSON bruto antigo (formato legado: {"resumo_narrativo":"..."})
   let texto = typeof resumo === "string" ? resumo : "";
   if (texto.startsWith("{")) {
     try {
@@ -40,19 +36,14 @@ function tituloSessao(resumo) {
       texto = "";
     }
   }
-
-  // Remover textos genéricos que não dizem nada
   const genericos = ["sessão encerrada", "sessão muito curta", "sessão encerrada sem resumo"];
   if (!texto || genericos.some(g => texto.toLowerCase().startsWith(g))) {
     return "sessão sem resumo";
   }
-
-  // Pegar as primeiras 7 palavras como título
   const words = texto.trim().split(/\s+/).slice(0, 7).join(" ");
   return words.length > 0 ? words.toLowerCase() : "sessão sem título";
 }
 
-// ─── Label legível dos construtos CÓRTEX ─────────────────────
 function construtoLabel(letra) {
   const labels = {
     C: "Carga emocional",
@@ -65,7 +56,6 @@ function construtoLabel(letra) {
   return labels[letra] || letra;
 }
 
-// ─── BUG 1: chave de persistência local por aluno ─────────────
 function getStorageKey(alunoId) { return `aria_msgs_${alunoId}`; }
 
 function saveLocal(alunoId, msgs, trocas, crisisLevel) {
@@ -79,7 +69,6 @@ function loadLocal(alunoId) {
     const raw = sessionStorage.getItem(getStorageKey(alunoId));
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    // expirar após 2 horas
     if (Date.now() - parsed.ts > 2 * 60 * 60 * 1000) { sessionStorage.removeItem(getStorageKey(alunoId)); return null; }
     return parsed;
   } catch { return null; }
@@ -89,7 +78,6 @@ function clearLocal(alunoId) {
   try { sessionStorage.removeItem(getStorageKey(alunoId)); } catch {}
 }
 
-// ─── Componente principal ─────────────────────────────────────
 export default function AriaChat({ portaEntrada = null, onNovaConversa = null }) {
   const { aluno, logout } = useAuth();
 
@@ -106,7 +94,6 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
   const [historico,    setHistorico]    = useState([]);
   const [systemPrompt, setSystemPrompt] = useState("");
 
-  // BUG 3: sidebar com estado explícito e handler dedicado
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [allSessions, setAllSessions] = useState([]);
 
@@ -115,39 +102,35 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
   const [energiaValor, setEnergiaValue] = useState(null);
   const [humorSalvo,   setHumorSalvo]   = useState(false);
 
-  // Modal de resumo de sessão
-  const [sessaoModal,  setSessaoModal]  = useState(null); // sessão selecionada
+  const [sessaoModal,  setSessaoModal]  = useState(null);
 
-  const portaInjetadaRef = useRef(false);  // controla injeção única da porta
-  const [resumoFinal, setResumoFinal] = useState(null);  // resumo exibido no encerramento
-    const bottomRef   = useRef(null);
-  const textareaRef = useRef(null);  // BUG 5: foco no input
+  const portaInjetadaRef = useRef(false);
+  const [resumoFinal, setResumoFinal] = useState(null);
+  const bottomRef   = useRef(null);
+  const textareaRef = useRef(null);
   const crisisRef   = useRef(0);
   const touchStartX = useRef(null);
 
   const hora    = new Date().getHours();
   const apelido = aluno?.apelido || aluno?.nome?.split(" ")[0] || "você";
 
-  // ── Scroll automático ──────────────────────────────────────
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  // ── Auto-resize textarea ───────────────────────────────────
   useEffect(() => {
     if (!textareaRef.current) return;
     textareaRef.current.style.height = "auto";
     textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + "px";
   }, [input]);
 
-  // ── BUG 3: swipe corrigido — não conflita com sidebar ─────
   useEffect(() => {
     function onTouchStart(e) { touchStartX.current = e.touches[0].clientX; }
     function onTouchEnd(e) {
       if (touchStartX.current === null) return;
       const dx = touchStartX.current - e.changedTouches[0].clientX;
       if (dx > 70)  setSidebarOpen(false);
-      if (dx < -70 && touchStartX.current < 40) setSidebarOpen(true); // só da borda esquerda
+      if (dx < -70 && touchStartX.current < 40) setSidebarOpen(true);
       touchStartX.current = null;
     }
     document.addEventListener("touchstart", onTouchStart, { passive: true });
@@ -158,12 +141,10 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
     };
   }, []);
 
-  // ── Inicializar ────────────────────────────────────────────
   useEffect(() => {
     if (!aluno) return;
     async function init() {
       try {
-        // BUG 1: tentar restaurar sessão do sessionStorage
         const cached = loadLocal(aluno.id);
 
         const { data: todas } = await supabase
@@ -171,14 +152,13 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
           .select("id, resumo_temas, resumo_sessao, construto_cortex, ponto_retomada, criado_em")
           .eq("aluno_id", aluno.id)
           .order("criado_em", { ascending: false })
-          .limit(50);   // busca 50 para sidebar, filtra 5 com resumo para memória
+          .limit(50);
 
         setAllSessions(todas || []);
 
         const comResumo = (todas || []).filter(c => c.resumo_sessao).slice(0, MAX_HIST);
         setHistorico(comResumo);
 
-        // Etapa 3: log do bloco de memória para diagnóstico
         const blocoLog = montarBlocoMemoria(apelido, comResumo);
         console.log("[ARIA memória]\n" + blocoLog);
 
@@ -194,7 +174,6 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
           .maybeSingle();
         if (ci) { setHumorValue(ci.humor); setEnergiaValue(ci.energia); setHumorSalvo(true); }
 
-        // BUG 1: restaurar mensagens se existirem no cache
         if (cached && cached.msgs && cached.msgs.length > 0) {
           setMessages(cached.msgs);
           setTrocas(cached.trocas || 0);
@@ -213,7 +192,6 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
     init();
   }, [aluno]);
 
-  // ── Salvar humor ──────────────────────────────────────────
   async function salvarHumor() {
     if (!humorValor || !energiaValor || humorSalvo) return;
     try {
@@ -226,19 +204,15 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
     } catch (e) { console.error("checkin:", e); }
   }
 
-  // ── saveSession — geração de resumo via API ──────────────
   const saveSession = useCallback(async (finalMessages, nivelFinal) => {
     if (!aluno || finalMessages.length < 2) return;
     setSavingSession(true);
     try {
-      // Montar histórico legível para o modelo resumir
       const historicoTexto = finalMessages
         .filter(m => m.role !== "system")
         .map(m => `${m.role === "user" ? "Aluno" : "ARIA"}: ${m.content}`)
         .join("\n");
 
-      // Chamada conforme spec do cofundador:
-      // histórico vai no CONTEÚDO da mensagem, não no system
       const res = await fetch("/.netlify/functions/anthropic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -247,18 +221,7 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
           max_tokens: 300,
           messages: [{
             role: "user",
-            content: `Com base nessa conversa, gere um resumo estruturado em JSON com exatamente estes campos:
-- resumo_sessao: descrição dos temas abordados em 2 a 4 frases, sem citar falas literais
-- construto_cortex: letra do construto mais ativado — C, O, R, T, E ou X
-- nivel_crise: número de 0 a 3
-- ponto_retomada: uma frase curta em primeira pessoa da ARIA para retomar na próxima conversa, em minúsculas
-
-Construtos CÓRTEX: C=Carga emocional, O=Organização/foco, R=Relações interpessoais, T=Tensão/ativação, E=Energia/vitalidade, X=Xeque existencial.
-
-Conversa:
-${historicoTexto}
-
-Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
+            content: `Com base nessa conversa, gere um resumo estruturado em JSON com exatamente estes campos:\n- resumo_sessao: descrição dos temas abordados em 2 a 4 frases, sem citar falas literais\n- construto_cortex: letra do construto mais ativado — C, O, R, T, E ou X\n- nivel_crise: número de 0 a 3\n- ponto_retomada: uma frase curta em primeira pessoa da ARIA para retomar na próxima conversa, em minúsculas\n\nConstrutos CÓRTEX: C=Carga emocional, O=Organização/foco, R=Relações interpessoais, T=Tensão/ativação, E=Energia/vitalidade, X=Xeque existencial.\n\nConversa:\n${historicoTexto}\n\nResponda apenas com o JSON válido, sem explicação, sem blocos de código.`,
           }],
         }),
       });
@@ -269,7 +232,6 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
 
       let resumo = null;
       try {
-        // limpar qualquer markdown que o modelo possa ter adicionado
         const clean = rawText
           .replace(/^```json\s*/i, "")
           .replace(/^```\s*/i, "")
@@ -287,17 +249,15 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
         };
       }
 
-      // Garantir que resumo_sessao nunca fique genérico demais
       if (!resumo?.resumo_sessao || resumo.resumo_sessao.trim() === "") {
         resumo.resumo_sessao = finalMessages.filter(m => m.role === "user").length <= 2
           ? "Sessão muito curta para resumo."
           : "Sessão encerrada sem resumo gerado.";
       }
 
-      // Guardar resumo para tela de encerramento
       setResumoFinal(resumo);
 
-            const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       await supabase.from("conversas").insert({
         aluno_id:           aluno.id,
         escola_id:          aluno.escola_id,
@@ -321,22 +281,18 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
         });
       }
 
-      // BUG 1: limpar cache local após salvar no Supabase
       clearLocal(aluno.id);
     } catch (e) { console.error("[ARIA] saveSession:", e); }
     finally     { setSavingSession(false); }
   }, [aluno]);
 
-  // ── Enviar mensagem ────────────────────────────────────────
   async function sendMessage() {
     if (!input.trim() || loading || sessionEnded) return;
     const userText = input.trim();
     setInput("");
 
-    // BUG 5: devolver foco ao input imediatamente
     setTimeout(() => textareaRef.current?.focus(), 50);
 
-    // Porta de entrada — injetada silenciosamente só na 1ª mensagem
     let textoParaAPI = userText;
     if (portaEntrada && !portaInjetadaRef.current) {
       textoParaAPI = `[porta: ${portaEntrada}]\n${userText}`;
@@ -354,11 +310,9 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
     const newTrocas = trocas + 1;
     setTrocas(newTrocas);
 
-    // BUG 1: salvar no sessionStorage após cada mensagem
     saveLocal(aluno.id, newMessages, newTrocas, newCrisis);
 
     try {
-      // Última msg usa textoParaAPI (com porta) — tela mostra userText limpo
       const apiMessages = newMessages
         .filter(m => m.role !== "system")
         .map((m, i, arr) => ({
@@ -391,10 +345,8 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
       const updated = [...newMessages, { role: "assistant", content: text }];
       setMessages(updated);
 
-      // BUG 1: salvar no sessionStorage após resposta da ARIA
       saveLocal(aluno.id, updated, newTrocas, finalCrisis);
 
-      // BUG 2: encerrar e gerar resumo a cada 15 trocas ou crise 3
       if (newTrocas >= MAX_TROCAS || finalCrisis === 3) {
         setSessionEnded(true);
         await saveSession(updated, finalCrisis);
@@ -404,7 +356,6 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
       setMessages(prev => [...prev, { role: "assistant", content: "deu um problema técnico aqui. pode repetir?" }]);
     } finally {
       setLoading(false);
-      // BUG 5: devolver foco após resposta
       setTimeout(() => textareaRef.current?.focus(), 100);
     }
   }
@@ -413,7 +364,6 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   }
 
-  // BUG 3: handler do menu com toggle explícito
   function toggleSidebar() {
     setSidebarOpen(prev => !prev);
   }
@@ -426,7 +376,6 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
 
   async function novaConversa() {
     setSidebarOpen(false);
-    // Se houver callback externo (HomeAluno), volta para tela de portas
     if (onNovaConversa) { onNovaConversa(); return; }
     if (messages.length > 1 && !sessionEnded) {
       setSessionEnded(true);
@@ -455,7 +404,6 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
     setMessages([{ role: "assistant", content: abertura }]);
   }
 
-  // ── Loading / erro ─────────────────────────────────────────
   if (initializing) return (
     <div style={s.loadScreen}>
       <ARIAOrb size={64} pulse />
@@ -465,16 +413,14 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
 
   if (error) return (
     <div style={s.loadScreen}>
-      <p style={{ color: "var(--error)", fontSize: 14, }}>{error}</p>
+      <p style={{ color: "var(--error)", fontSize: 14 }}>{error}</p>
       <button onClick={() => window.location.reload()} style={s.btnPill}>recarregar</button>
     </div>
   );
 
-  // ── Render ─────────────────────────────────────────────────
   return (
     <div style={s.shell}>
 
-      {/* Overlay sidebar */}
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
@@ -483,7 +429,6 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
         />
       )}
 
-      {/* ── Modal de resumo de sessão ───────────────────────── */}
       {sessaoModal && (
         <div style={s.modalOverlay} onClick={() => setSessaoModal(null)}>
           <div style={s.modalCard} onClick={e => e.stopPropagation()}>
@@ -533,7 +478,6 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
         </div>
       )}
 
-      {/* ── Sidebar ────────────────────────────────────────── */}
       <aside style={{
         ...s.sidebar,
         transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
@@ -550,7 +494,7 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
 
         <div style={s.sessionList}>
           {allSessions.length === 0 ? (
-            <p style={s.sessionEmpty}>primeira sessão 🌱</p>
+            <p style={s.sessionEmpty}>primeira sessão</p>
           ) : (
             allSessions.map((sess, i) => (
               <div
@@ -595,12 +539,9 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
         </div>
       </aside>
 
-      {/* ── Área principal ─────────────────────────────────── */}
       <main style={s.main}>
 
-        {/* Header */}
         <header style={s.header}>
-          {/* BUG 3: botão com área de toque grande e handler correto */}
           <button
             onClick={toggleSidebar}
             style={s.btnMenu}
@@ -631,18 +572,14 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
           </div>
         </header>
 
-        {/* Barra de progresso */}
         <div style={s.progressTrack}>
           <div style={{
             ...s.progressFill,
             width: `${Math.min((trocas / MAX_TROCAS) * 100, 100)}%`,
-            background: trocas >= MAX_TROCAS - 3
-              ? "var(--error)"
-              : "var(--aria-action)",
+            background: trocas >= MAX_TROCAS - 3 ? "var(--error)" : "var(--aria-action)",
           }} />
         </div>
 
-        {/* Mensagens */}
         <div style={s.messages}>
           {messages.map((msg, i) => (
             <MessageBubble key={i} msg={msg} isUser={msg.role === "user"} />
@@ -669,11 +606,10 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
           <div ref={bottomRef} />
         </div>
 
-        {/* Card de humor colapsável */}
         {!humorSalvo && (
           <div style={s.humorCard}>
             <button onClick={() => setHumorOpen(v => !v)} style={s.humorToggle}>
-              <span style={s.humorToggleText}>{humorOpen ? "fechar" : "✦ como você tá hoje?"}</span>
+              <span style={s.humorToggleText}>{humorOpen ? "fechar" : "como você tá hoje?"}</span>
               <span style={{ fontSize: 11, color: "var(--muted)", transition: "transform .3s", transform: humorOpen ? "rotate(180deg)" : "rotate(0)" }}>▼</span>
             </button>
             {humorOpen && (
@@ -702,7 +638,6 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
           </div>
         )}
 
-        {/* Input */}
         {!sessionEnded && (
           <div style={s.inputArea}>
             <div style={{
@@ -725,9 +660,7 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
                 disabled={!input.trim() || loading}
                 style={{
                   ...s.btnSend,
-                  background: input.trim() && !loading
-                    ? "var(--aria-action)"
-                    : "rgba(138,135,160,0.12)",
+                  background: input.trim() && !loading ? "var(--aria-action)" : "rgba(138,135,160,0.12)",
                   cursor: input.trim() && !loading ? "pointer" : "default",
                 }}
                 aria-label="enviar"
@@ -740,7 +673,6 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
         )}
       </main>
 
-      {/* ── Tela de encerramento ─────────────────────────────── */}
       {sessionEnded && (
         <TelaEncerramento
           resumo={resumoFinal}
@@ -763,7 +695,6 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
   );
 }
 
-// ─── Tela de Encerramento ────────────────────────────────────
 function TelaEncerramento({ resumo, salvando, onNovaConversa }) {
   const temResumoReal = resumo?.resumo_sessao &&
     !["sessão muito curta", "sessão encerrada"].some(g =>
@@ -774,7 +705,6 @@ function TelaEncerramento({ resumo, salvando, onNovaConversa }) {
     <div style={te.overlay}>
       <div style={te.container}>
 
-        {/* Orb com brilho */}
         <div style={te.orbWrap}>
           <div style={te.orbGlow} />
           <div style={te.orb}>
@@ -794,11 +724,9 @@ function TelaEncerramento({ resumo, salvando, onNovaConversa }) {
           </>
         ) : (
           <>
-            {/* Frase de fechamento */}
             <p style={te.titulo}>foi bom conversar hoje.</p>
             <p style={te.sub}>vou lembrar disso quando você voltar.</p>
 
-            {/* Card de resumo — só se tiver conteúdo real */}
             {temResumoReal && (
               <div style={te.card}>
                 <div style={te.cardRow}>
@@ -822,7 +750,6 @@ function TelaEncerramento({ resumo, salvando, onNovaConversa }) {
               </div>
             )}
 
-            {/* Botão único */}
             <button onClick={onNovaConversa} style={te.btn}>
               até logo
             </button>
@@ -833,7 +760,6 @@ function TelaEncerramento({ resumo, salvando, onNovaConversa }) {
   );
 }
 
-// Estilos da tela de encerramento
 const te = {
   overlay: {
     position: "fixed", inset: 0,
@@ -862,20 +788,18 @@ const te = {
   },
   orb: {
     width: 64, height: 64, borderRadius: "50%",
-    background: "var(--aria-action)",
+    background: "linear-gradient(135deg, var(--orb-purple), var(--orb-pink))",
     display: "flex", alignItems: "center", justifyContent: "center",
     position: "relative",
+    boxShadow: "var(--shadow-orb)",
   },
   titulo: {
-    
     fontSize: 22, fontWeight: 400,
-    color: "var(--text)", margin: 0,
-    lineHeight: 1.3,
+    color: "var(--text)", margin: 0, lineHeight: 1.3,
   },
   sub: {
     fontSize: 14, color: "var(--muted)",
-    margin: 0, 
-    lineHeight: 1.5,
+    margin: 0, lineHeight: 1.5,
   },
   card: {
     width: "100%",
@@ -894,7 +818,6 @@ const te = {
   cardLabel: {
     fontSize: 10, color: "var(--muted)",
     textTransform: "uppercase", letterSpacing: "0.08em",
-    
   },
   badge: {
     fontSize: 10, fontWeight: 700,
@@ -906,7 +829,6 @@ const te = {
   cardTexto: {
     fontSize: 14, color: "var(--text)",
     lineHeight: 1.65, margin: 0,
-    
   },
   btn: {
     marginTop: 8,
@@ -914,14 +836,12 @@ const te = {
     borderRadius: 50, border: "none",
     background: "var(--aria-action)",
     color: "var(--aria-action-text)", fontSize: 15, fontWeight: 600,
-    
     cursor: "pointer",
     transition: "opacity 0.2s",
     letterSpacing: "0.02em",
   },
 };
 
-// ─── Sub-componentes ──────────────────────────────────────────
 function MessageBubble({ msg, isUser }) {
   return (
     <div style={{
@@ -995,27 +915,22 @@ function IconSend({ active }) {
   );
 }
 
-// ─── Estilos ──────────────────────────────────────────────────
 const s = {
   shell: {
     display: "flex", height: "100dvh", overflow: "hidden",
-    background: "var(--bg)", color: "var(--text)",
-     position: "relative",
+    background: "var(--bg)", color: "var(--text)", position: "relative",
   },
   loadScreen: {
     display: "flex", flexDirection: "column", alignItems: "center",
     justifyContent: "center", gap: 16,
     height: "100dvh", background: "var(--bg)",
   },
-  loadText: { color: "var(--muted)", fontSize: 13, },
-
-  // BUG 3: overlay com z-index alto e pointer-events corretos
+  loadText: { color: "var(--muted)", fontSize: 13 },
   overlay: {
     position: "fixed", inset: 0,
     background: "rgba(14,13,20,0.55)",
     backdropFilter: "blur(2px)",
-    zIndex: 19,
-    cursor: "pointer",
+    zIndex: 19, cursor: "pointer",
   },
   sidebar: {
     position: "fixed", left: 0, top: 0, bottom: 0,
@@ -1034,31 +949,22 @@ const s = {
     borderBottom: "1px solid var(--border)",
   },
   sidebarBrand: { display: "flex", alignItems: "center", gap: 10 },
-  brandName: {
-    fontSize: 18, fontWeight: 600,
-    color: "var(--aria-action)", letterSpacing: "0.04em",
-  },
+  brandName: { fontSize: 18, fontWeight: 600, color: "var(--aria-action)", letterSpacing: "0.04em" },
   sessionList: {
     flex: 1, overflowY: "auto",
     padding: "10px 8px",
     display: "flex", flexDirection: "column", gap: 2,
   },
-  sessionEmpty: {
-    color: "var(--muted)", fontSize: 13,
-    padding: "12px 8px", textAlign: "center",
-  },
+  sessionEmpty: { color: "var(--muted)", fontSize: 13, padding: "12px 8px", textAlign: "center" },
   sessionItem: {
     padding: "10px 12px", borderRadius: "var(--radius-sm)",
-    cursor: "default",
-    transition: "background var(--transition)",
+    cursor: "default", transition: "background var(--transition-base)",
   },
   sessionHeader: { display: "flex", alignItems: "center", gap: 6, marginBottom: 4 },
   badge: {
     fontSize: 10, fontWeight: 700,
-    color: "var(--aria-action)",
-    background: "var(--aria-action-subtle)",
-    borderRadius: 4, padding: "1px 6px",
-    letterSpacing: "0.04em",
+    color: "var(--aria-action)", background: "var(--aria-action-subtle)",
+    borderRadius: 4, padding: "1px 6px", letterSpacing: "0.04em",
   },
   sessionDate: { fontSize: 11, color: "var(--muted)" },
   sessionTitle: {
@@ -1090,9 +996,7 @@ const s = {
     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
   },
   alunoApelido: { fontSize: 11, margin: 0, color: "var(--muted)" },
-
   main: { flex: 1, display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden", minWidth: 0 },
-
   header: {
     display: "flex", alignItems: "center", justifyContent: "space-between",
     padding: "10px 14px",
@@ -1101,17 +1005,11 @@ const s = {
     borderBottom: "1px solid var(--border)",
     flexShrink: 0, zIndex: 5,
   },
-
-  // BUG 3: área de toque grande para o botão de menu
   btnMenu: {
-    background: "none", border: "none",
-    color: "var(--muted)",
-    cursor: "pointer",
-    padding: "8px",           // área de toque maior
-    margin: "-8px",           // compensa o padding visual
+    background: "none", border: "none", color: "var(--muted)", cursor: "pointer",
+    padding: "8px", margin: "-8px",
     display: "flex", alignItems: "center", justifyContent: "center",
-    borderRadius: 8,
-    minWidth: 40, minHeight: 40,
+    borderRadius: 8, minWidth: 40, minHeight: 40,
   },
   btnIcon: {
     background: "var(--border)", border: "none",
@@ -1120,15 +1018,8 @@ const s = {
     display: "flex", alignItems: "center", justifyContent: "center",
     minWidth: 36, minHeight: 36,
   },
-  headerCenter: {
-    display: "flex", alignItems: "center", gap: 10,
-    flex: 1, justifyContent: "center",
-  },
-  headerName: {
-    margin: 0, fontSize: 15, fontWeight: 600,
-    color: "var(--aria-action)", 
-    letterSpacing: "0.04em",
-  },
+  headerCenter: { display: "flex", alignItems: "center", gap: 10, flex: 1, justifyContent: "center" },
+  headerName: { margin: 0, fontSize: 15, fontWeight: 600, color: "var(--aria-action)", letterSpacing: "0.04em" },
   onlineRow: { display: "flex", alignItems: "center", gap: 5 },
   onlineDot: { width: 7, height: 7, borderRadius: "50%", background: "var(--success)", animation: "pulse 2s ease-in-out infinite" },
   onlineText: { fontSize: 11, color: "var(--success)", letterSpacing: "0.04em" },
@@ -1137,12 +1028,9 @@ const s = {
     background: "none", border: "1px solid var(--border-strong)",
     borderRadius: 20, padding: "4px 12px",
     fontSize: 12, color: "var(--muted)", cursor: "pointer",
-    
   },
-
   progressTrack: { height: 2, background: "var(--border)", flexShrink: 0 },
   progressFill:  { height: "100%", transition: "width .5s ease, background .3s ease", borderRadius: 1 },
-
   messages: {
     flex: 1, overflowY: "auto",
     padding: "20px 14px 12px",
@@ -1158,25 +1046,12 @@ const s = {
     background: "var(--aria-action-subtle)", border: "1px solid var(--aria-action)",
     borderRadius: "18px 18px 4px 18px", padding: "11px 15px", maxWidth: "78%",
   },
-  bubbleText: {
-    margin: 0, fontSize: 15, lineHeight: 1.65,
-    whiteSpace: "pre-wrap", wordBreak: "break-word",
-    
-  },
+  bubbleText: { margin: 0, fontSize: 15, lineHeight: 1.65, whiteSpace: "pre-wrap", wordBreak: "break-word" },
   dot: {
     width: 7, height: 7, borderRadius: "50%",
     background: "var(--aria-action)", display: "inline-block",
     animation: "blink 1.2s infinite",
   },
-  endCard: {
-    display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
-    padding: "28px 24px", margin: "8px 0",
-    background: "var(--surface)", borderRadius: "var(--radius)",
-    border: "1px solid var(--border)", textAlign: "center",
-    animation: "fadeUp .4s ease",
-  },
-  endTitle: { margin: 0, fontSize: 16, fontWeight: 600, color: "var(--text)" },
-  endSub:   { margin: 0, fontSize: 13, color: "var(--muted)", lineHeight: 1.5 },
   saving:   { textAlign: "center", fontSize: 12, color: "var(--muted)", animation: "pulse 1.2s infinite" },
   savingWrap: {
     display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
@@ -1184,10 +1059,8 @@ const s = {
   },
   savingOrb: {
     width: 10, height: 10, borderRadius: "50%",
-    background: "var(--aria-action)",
-    animation: "pulse 1.2s ease-in-out infinite",
+    background: "var(--aria-action)", animation: "pulse 1.2s ease-in-out infinite",
   },
-
   humorCard: {
     margin: "0 12px 8px", background: "var(--surface)",
     border: "1px solid var(--border)",
@@ -1204,7 +1077,6 @@ const s = {
   humorLabel:   { fontSize: 11, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 },
   humorOptions: { display: "flex", gap: 6 },
   humorOpt:     { flex: 1, fontSize: 22, padding: "8px 4px", borderRadius: 10, cursor: "pointer", transition: "all .15s" },
-
   inputArea: {
     padding: "10px 12px",
     paddingBottom: "calc(10px + env(safe-area-inset-bottom))",
@@ -1221,7 +1093,7 @@ const s = {
   textarea: {
     flex: 1, background: "none", border: "none", outline: "none",
     resize: "none", fontSize: 15, lineHeight: 1.5,
-    color: "var(--text)", 
+    color: "var(--text)",
     minHeight: 24, maxHeight: 120, overflowY: "auto", padding: 0,
   },
   btnSend: {
@@ -1229,18 +1101,13 @@ const s = {
     flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
     transition: "background 0.2s",
   },
-  inputHint: {
-    margin: "5px 0 0", fontSize: 10, color: "var(--muted)",
-    textAlign: "center", letterSpacing: "0.04em",
-  },
+  inputHint: { margin: "5px 0 0", fontSize: 10, color: "var(--muted)", textAlign: "center", letterSpacing: "0.04em" },
   btnPill: {
     padding: "12px 28px", borderRadius: 50, border: "none", cursor: "pointer",
     background: "var(--aria-action)",
     color: "var(--aria-action-text)", fontSize: 14, fontWeight: 600,
-     transition: "opacity 0.2s",
+    transition: "opacity 0.2s",
   },
-
-  // Modal de resumo
   modalOverlay: {
     position: "fixed", inset: 0,
     background: "rgba(14,13,20,0.6)",
@@ -1251,40 +1118,29 @@ const s = {
   },
   modalCard: {
     background: "var(--surface)",
-    borderRadius: "var(--radius)",
+    borderRadius: "var(--radius-lg)",
     border: "1px solid var(--border)",
     width: "100%", maxWidth: 420,
-    overflow: "hidden",
-    animation: "fadeUp .25s ease",
+    overflow: "hidden", animation: "fadeUp .25s ease",
   },
   modalHeader: {
-    display: "flex", alignItems: "center",
-    justifyContent: "space-between",
+    display: "flex", alignItems: "center", justifyContent: "space-between",
     padding: "16px 20px 12px",
     borderBottom: "1px solid var(--border)",
   },
   modalClose: {
     background: "none", border: "none",
     color: "var(--muted)", fontSize: 22,
-    cursor: "pointer", lineHeight: 1,
-    padding: "0 4px",
+    cursor: "pointer", lineHeight: 1, padding: "0 4px",
   },
-  modalBody: {
-    padding: "20px",
-  },
+  modalBody: { padding: "20px" },
   modalLabel: {
     fontSize: 11, color: "var(--muted)",
-    textTransform: "uppercase", letterSpacing: "0.08em",
-     marginBottom: 8,
+    textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8,
   },
-  modalText: {
-    fontSize: 14, color: "var(--text)",
-    lineHeight: 1.65, margin: 0,
-    
-  },
+  modalText: { fontSize: 14, color: "var(--text)", lineHeight: 1.65, margin: 0 },
   modalFooter: {
-    display: "flex", alignItems: "center",
-    justifyContent: "space-between",
+    display: "flex", alignItems: "center", justifyContent: "space-between",
     marginTop: 24, paddingTop: 16,
     borderTop: "1px solid var(--border)",
   },
