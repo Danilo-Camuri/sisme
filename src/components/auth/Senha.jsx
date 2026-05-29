@@ -7,7 +7,7 @@ import { supabase } from '../../lib/supabase'
 export function RecuperarSenha() {
   const { recuperarSenha } = useAuth()
   const [email, setEmail] = useState('')
-  const [status, setStatus] = useState(null) // null | 'success' | 'error'
+  const [status, setStatus] = useState(null)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -38,7 +38,7 @@ export function RecuperarSenha() {
         <Logo />
 
         <div style={{ marginBottom: '28px' }}>
-          <h1 style={{ fontSize: '20px', marginBottom: '6px' }}>Recuperar senha</h1>
+          <h1 style={{ fontSize: '20px', marginBottom: '6px', color: 'var(--text)' }}>Recuperar senha</h1>
           <p style={{ color: 'var(--text-2)', fontSize: '14px' }}>
             Informe seu e-mail e enviaremos um link para criar uma nova senha
           </p>
@@ -119,7 +119,7 @@ export function NovaSenha() {
         <Logo />
 
         <div style={{ marginBottom: '28px' }}>
-          <h1 style={{ fontSize: '20px', marginBottom: '6px' }}>Nova senha</h1>
+          <h1 style={{ fontSize: '20px', marginBottom: '6px', color: 'var(--text)' }}>Nova senha</h1>
           <p style={{ color: 'var(--text-2)', fontSize: '14px' }}>
             Crie uma senha nova para sua conta
           </p>
@@ -172,7 +172,7 @@ function Logo() {
           <circle cx="10" cy="10.5" r="2.5" fill="var(--aria-action)"/>
         </svg>
       </div>
-      <span style={{ fontFamily: 'var(--font)', fontSize: '20px', fontWeight: '600', letterSpacing: '-0.02em' }}>
+      <span style={{ fontSize: '20px', fontWeight: '600', letterSpacing: '-0.02em', color: 'var(--text)' }}>
         SISME
       </span>
     </div>
@@ -185,7 +185,7 @@ const pageStyle = {
   alignItems: 'center',
   justifyContent: 'center',
   padding: '24px 20px',
-  background: `radial-gradient(ellipse at top, rgba(124,106,247,0.12) 0%, var(--bg) 60%)`
+  background: 'var(--bg)'
 }
 
 const cardStyle = {
@@ -194,5 +194,6 @@ const cardStyle = {
   background: 'var(--surface)',
   borderRadius: 'var(--radius-lg)',
   padding: '36px 32px',
-  border: '1px solid var(--border)'
+  border: '1px solid var(--border)',
+  boxShadow: 'var(--shadow-md)'
 }
