@@ -23,7 +23,6 @@ export default function Cadastro() {
     senha: '',
     senhaConfirm: ''
   })
-  // Guardamos escolaId e alunoId após validação do step 0
   const [validacao, setValidacao] = useState({ escolaId: null, alunoId: null })
   const [errors, setErrors] = useState({})
   const [globalError, setGlobalError] = useState('')
@@ -62,7 +61,6 @@ export default function Cadastro() {
     e.preventDefault()
     if (!validateLocal()) return
 
-    // Step 0: valida escola e matrícula no servidor antes de avançar
     if (step === 0) {
       setLoading(true)
       const result = await validarEscolaMatricula({
@@ -81,13 +79,11 @@ export default function Cadastro() {
       return
     }
 
-    // Steps intermediários: avança
     if (step < STEPS.length - 1) {
       setStep(s => s + 1)
       return
     }
 
-    // Step final: cria a conta
     setLoading(true)
     const result = await cadastrar({
       email: form.email,
@@ -139,7 +135,7 @@ export default function Cadastro() {
         <StepIndicator step={step} total={STEPS.length} />
 
         <div style={{ marginBottom: '28px' }}>
-          <h1 style={{ fontSize: '20px', marginBottom: '4px' }}>{TITLES[step]}</h1>
+          <h1 style={{ fontSize: '20px', marginBottom: '4px', color: 'var(--text)' }}>{TITLES[step]}</h1>
           <p style={{ color: 'var(--text-2)', fontSize: '14px' }}>{SUBTITLES[step]}</p>
         </div>
 
@@ -274,7 +270,7 @@ function Logo() {
           <circle cx="10" cy="10.5" r="2.5" fill="var(--aria-action)"/>
         </svg>
       </div>
-      <span style={{ fontFamily: 'var(--font)', fontSize: '20px', fontWeight: '600', letterSpacing: '-0.02em' }}>
+      <span style={{ fontSize: '20px', fontWeight: '600', letterSpacing: '-0.02em', color: 'var(--text)' }}>
         SISME
       </span>
     </div>
@@ -284,10 +280,11 @@ function Logo() {
 const pageStyle = {
   minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center',
   padding: '24px 20px',
-  background: `radial-gradient(ellipse at top, rgba(124,106,247,0.12) 0%, var(--bg) 60%)`
+  background: 'var(--bg)'
 }
 
 const cardStyle = {
   width: '100%', maxWidth: '400px', background: 'var(--surface)',
-  borderRadius: 'var(--radius-lg)', padding: '36px 32px', border: '1px solid var(--border)'
+  borderRadius: 'var(--radius-lg)', padding: '36px 32px', border: '1px solid var(--border)',
+  boxShadow: 'var(--shadow-md)'
 }
