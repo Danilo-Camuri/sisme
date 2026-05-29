@@ -173,8 +173,8 @@ export function Alert({ type = 'error', children }) {
       fontSize: '14px',
       lineHeight: '1.5'
     }}>
-      {type === 'error'   && <AlertCircle   size={16} style={{ flexShrink: 0, marginTop: '1px' }} />}
-      {type === 'success' && <CheckCircle2  size={16} style={{ flexShrink: 0, marginTop: '1px' }} />}
+      {type === 'error'   && <AlertCircle  size={16} style={{ flexShrink: 0, marginTop: '1px' }} />}
+      {type === 'success' && <CheckCircle2 size={16} style={{ flexShrink: 0, marginTop: '1px' }} />}
       {children}
     </div>
   )
