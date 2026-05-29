@@ -465,7 +465,7 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
 
   if (error) return (
     <div style={s.loadScreen}>
-      <p style={{ color: "var(--accent-pink)", fontSize: 14, fontFamily: "var(--font-body)" }}>{error}</p>
+      <p style={{ color: "var(--error)", fontSize: 14, fontFamily: "var(--font-body)" }}>{error}</p>
       <button onClick={() => window.location.reload()} style={s.btnPill}>recarregar</button>
     </div>
   );
@@ -514,7 +514,7 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
               {sessaoModal.ponto_retomada && (
                 <>
                   <p style={{ ...s.modalLabel, marginTop: 16 }}>ficou em aberto</p>
-                  <p style={{ ...s.modalText, color: "var(--accent-purple)" }}>
+                  <p style={{ ...s.modalText, color: "var(--aria-action)" }}>
                     {sessaoModal.ponto_retomada}
                   </p>
                 </>
@@ -637,8 +637,8 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
             ...s.progressFill,
             width: `${Math.min((trocas / MAX_TROCAS) * 100, 100)}%`,
             background: trocas >= MAX_TROCAS - 3
-              ? "var(--accent-pink)"
-              : "linear-gradient(90deg, var(--accent-purple), var(--accent-pink))",
+              ? "var(--error)"
+              : "var(--aria-action)",
           }} />
         </div>
 
@@ -682,7 +682,7 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
                   <p style={s.humorLabel}>humor</p>
                   <div style={s.humorOptions}>
                     {[["😶","1"],["😔","2"],["😐","3"],["🙂","4"],["😄","5"]].map(([e, v]) => (
-                      <button key={v} onClick={() => setHumorValue(Number(v))} style={{ ...s.humorOpt, background: humorValor === Number(v) ? "rgba(200,166,255,0.2)" : "transparent", border: humorValor === Number(v) ? "1px solid var(--accent-purple)" : "1px solid transparent" }}>{e}</button>
+                      <button key={v} onClick={() => setHumorValue(Number(v))} style={{ ...s.humorOpt, background: humorValor === Number(v) ? "var(--aria-action-subtle)" : "transparent", border: humorValor === Number(v) ? "1.5px solid var(--aria-action)" : "1px solid transparent" }}>{e}</button>
                     ))}
                   </div>
                 </div>
@@ -690,7 +690,7 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
                   <p style={s.humorLabel}>energia</p>
                   <div style={s.humorOptions}>
                     {[["🪫","1"],["😴","2"],["😑","3"],["⚡","4"],["🔥","5"]].map(([e, v]) => (
-                      <button key={v} onClick={() => setEnergiaValue(Number(v))} style={{ ...s.humorOpt, background: energiaValor === Number(v) ? "rgba(200,166,255,0.2)" : "transparent", border: energiaValor === Number(v) ? "1px solid var(--accent-purple)" : "1px solid transparent" }}>{e}</button>
+                      <button key={v} onClick={() => setEnergiaValue(Number(v))} style={{ ...s.humorOpt, background: energiaValor === Number(v) ? "var(--aria-action-subtle)" : "transparent", border: energiaValor === Number(v) ? "1.5px solid var(--aria-action)" : "1px solid transparent" }}>{e}</button>
                     ))}
                   </div>
                 </div>
@@ -707,7 +707,7 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
           <div style={s.inputArea}>
             <div style={{
               ...s.inputWrapper,
-              borderColor: input.trim() ? "var(--accent-purple)" : "rgba(200,166,255,0.15)",
+              borderColor: input.trim() ? "var(--aria-action)" : "var(--border)",
             }}>
               <textarea
                 ref={textareaRef}
@@ -726,7 +726,7 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
                 style={{
                   ...s.btnSend,
                   background: input.trim() && !loading
-                    ? "linear-gradient(135deg, var(--accent-purple), var(--accent-pink))"
+                    ? "var(--aria-action)"
                     : "rgba(138,135,160,0.12)",
                   cursor: input.trim() && !loading ? "pointer" : "default",
                 }}
@@ -753,7 +753,7 @@ Responda apenas com o JSON válido, sem explicação, sem blocos de código.`,
         @keyframes fadeUp  { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
         @keyframes blink   { 0%,80%,100% { opacity:.2; transform:scale(.8) } 40% { opacity:1; transform:scale(1) } }
         @keyframes pulse   { 0%,100% { opacity:.6 } 50% { opacity:1 } }
-        @keyframes orbGlow { 0%,100% { box-shadow:0 0 12px rgba(200,166,255,.4) } 50% { box-shadow:0 0 24px rgba(255,159,203,.5) } }
+        @keyframes orbGlow { 0%,100% { box-shadow: var(--shadow-md) } 50% { box-shadow: var(--shadow-lg) } }
         textarea::placeholder { color: var(--muted); }
         textarea:focus        { outline: none; }
         ::-webkit-scrollbar   { width: 3px; }
@@ -814,7 +814,7 @@ function TelaEncerramento({ resumo, salvando, onNovaConversa }) {
                     <div style={{ ...te.cardRow, marginTop: 14 }}>
                       <span style={te.cardLabel}>ficou em aberto</span>
                     </div>
-                    <p style={{ ...te.cardTexto, color: "var(--accent-purple)" }}>
+                    <p style={{ ...te.cardTexto, color: "var(--aria-action)" }}>
                       {resumo.ponto_retomada}
                     </p>
                   </>
@@ -857,12 +857,12 @@ const te = {
   orbGlow: {
     position: "absolute",
     width: 80, height: 80, borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(200,166,255,0.3) 0%, transparent 70%)",
+    background: "radial-gradient(circle, var(--aria-action-subtle) 0%, transparent 70%)",
     animation: "pulse 2.5s ease-in-out infinite",
   },
   orb: {
     width: 64, height: 64, borderRadius: "50%",
-    background: "linear-gradient(135deg, var(--accent-purple), var(--accent-pink))",
+    background: "var(--aria-action)",
     display: "flex", alignItems: "center", justifyContent: "center",
     position: "relative",
   },
@@ -880,7 +880,7 @@ const te = {
   card: {
     width: "100%",
     background: "var(--surface)",
-    border: "1px solid rgba(200,166,255,0.15)",
+    border: "1px solid var(--border)",
     borderRadius: "var(--radius-sm)",
     padding: "18px 20px",
     textAlign: "left",
@@ -898,8 +898,8 @@ const te = {
   },
   badge: {
     fontSize: 10, fontWeight: 700,
-    color: "var(--accent-purple)",
-    background: "rgba(200,166,255,0.12)",
+    color: "var(--aria-action)",
+    background: "var(--aria-action-subtle)",
     borderRadius: 4, padding: "1px 6px",
     letterSpacing: "0.04em",
   },
@@ -912,8 +912,8 @@ const te = {
     marginTop: 8,
     padding: "13px 40px",
     borderRadius: 50, border: "none",
-    background: "linear-gradient(135deg, var(--accent-purple), var(--accent-pink))",
-    color: "#0E0D14", fontSize: 15, fontWeight: 600,
+    background: "var(--aria-action)",
+    color: "var(--aria-action-text)", fontSize: 15, fontWeight: 600,
     fontFamily: "var(--font-body)",
     cursor: "pointer",
     transition: "opacity 0.2s",
@@ -941,7 +941,7 @@ function ARIAOrb({ size = 36, pulse = false }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%",
-      background: "linear-gradient(135deg, var(--accent-purple), var(--accent-pink))",
+      background: "var(--aria-action)",
       display: "flex", alignItems: "center", justifyContent: "center",
       flexShrink: 0,
       animation: pulse ? "orbGlow 2s ease-in-out infinite" : "none",
@@ -1020,7 +1020,7 @@ const s = {
     position: "fixed", left: 0, top: 0, bottom: 0,
     width: 272,
     background: "var(--surface)",
-    borderRight: "1px solid rgba(200,166,255,0.1)",
+    borderRight: "1px solid var(--border)",
     display: "flex", flexDirection: "column",
     zIndex: 20,
     transition: "transform 0.28s cubic-bezier(.4,0,.2,1)",
@@ -1030,12 +1030,12 @@ const s = {
     display: "flex", alignItems: "center", justifyContent: "space-between",
     padding: "20px 16px 14px",
     paddingTop: "calc(20px + env(safe-area-inset-top))",
-    borderBottom: "1px solid rgba(200,166,255,0.08)",
+    borderBottom: "1px solid var(--border)",
   },
   sidebarBrand: { display: "flex", alignItems: "center", gap: 10 },
   brandName: {
     fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600,
-    color: "var(--accent-purple)", letterSpacing: "0.04em",
+    color: "var(--aria-action)", letterSpacing: "0.04em",
   },
   sessionList: {
     flex: 1, overflowY: "auto",
@@ -1054,8 +1054,8 @@ const s = {
   sessionHeader: { display: "flex", alignItems: "center", gap: 6, marginBottom: 4 },
   badge: {
     fontSize: 10, fontWeight: 700,
-    color: "var(--accent-purple)",
-    background: "rgba(200,166,255,0.12)",
+    color: "var(--aria-action)",
+    background: "var(--aria-action-subtle)",
     borderRadius: 4, padding: "1px 6px",
     letterSpacing: "0.04em",
   },
@@ -1066,7 +1066,7 @@ const s = {
     display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
   },
   sessionRetomada: {
-    fontSize: 11, color: "var(--accent-purple)", margin: "4px 0 0",
+    fontSize: 11, color: "var(--aria-action)", margin: "4px 0 0",
     lineHeight: 1.4, fontStyle: "italic",
     overflow: "hidden", textOverflow: "ellipsis",
     display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical",
@@ -1074,15 +1074,15 @@ const s = {
   sidebarFooter: {
     padding: "12px 16px",
     paddingBottom: "calc(12px + env(safe-area-inset-bottom))",
-    borderTop: "1px solid rgba(200,166,255,0.08)",
+    borderTop: "1px solid var(--border)",
     display: "flex", alignItems: "center", justifyContent: "space-between",
   },
   alunoInfo: { display: "flex", alignItems: "center", gap: 10, overflow: "hidden", flex: 1 },
   alunoAvatar: {
     width: 32, height: 32, borderRadius: "50%",
-    background: "linear-gradient(135deg, var(--accent-purple), var(--accent-pink))",
+    background: "var(--aria-action)",
     display: "flex", alignItems: "center", justifyContent: "center",
-    fontSize: 14, fontWeight: 700, color: "#0E0D14", flexShrink: 0,
+    fontSize: 14, fontWeight: 700, color: "var(--aria-action-text)", flexShrink: 0,
   },
   alunoNome: {
     fontSize: 13, fontWeight: 600, margin: 0, color: "var(--text)",
@@ -1097,7 +1097,7 @@ const s = {
     padding: "10px 14px",
     paddingTop: "calc(10px + env(safe-area-inset-top))",
     background: "var(--surface)",
-    borderBottom: "1px solid rgba(200,166,255,0.1)",
+    borderBottom: "1px solid var(--border)",
     flexShrink: 0, zIndex: 5,
   },
 
@@ -1113,7 +1113,7 @@ const s = {
     minWidth: 40, minHeight: 40,
   },
   btnIcon: {
-    background: "rgba(200,166,255,0.08)", border: "none",
+    background: "var(--border)", border: "none",
     color: "var(--muted)", cursor: "pointer",
     padding: 8, borderRadius: 8,
     display: "flex", alignItems: "center", justifyContent: "center",
@@ -1125,7 +1125,7 @@ const s = {
   },
   headerName: {
     margin: 0, fontSize: 15, fontWeight: 600,
-    color: "var(--accent-purple)", fontFamily: "var(--font-display)",
+    color: "var(--aria-action)", fontFamily: "var(--font-display)",
     letterSpacing: "0.04em",
   },
   onlineRow: { display: "flex", alignItems: "center", gap: 5 },
@@ -1133,13 +1133,13 @@ const s = {
   onlineText: { fontSize: 11, color: "#4ade80", letterSpacing: "0.04em" },
   headerRight: { display: "flex", alignItems: "center", gap: 8, minWidth: 80, justifyContent: "flex-end" },
   btnEncerrar: {
-    background: "none", border: "1px solid rgba(200,166,255,0.2)",
+    background: "none", border: "1px solid var(--border-strong)",
     borderRadius: 20, padding: "4px 12px",
     fontSize: 12, color: "var(--muted)", cursor: "pointer",
     fontFamily: "var(--font-body)",
   },
 
-  progressTrack: { height: 2, background: "rgba(200,166,255,0.08)", flexShrink: 0 },
+  progressTrack: { height: 2, background: "var(--border)", flexShrink: 0 },
   progressFill:  { height: "100%", transition: "width .5s ease, background .3s ease", borderRadius: 1 },
 
   messages: {
@@ -1150,11 +1150,11 @@ const s = {
   msgRow: { display: "flex", alignItems: "flex-end", gap: 8, animation: "fadeUp .25s ease" },
   ariaAvatarSmall: { flexShrink: 0 },
   ariaBubble: {
-    background: "var(--surface)", border: "1px solid rgba(200,166,255,0.1)",
+    background: "var(--surface)", border: "1px solid var(--border)",
     borderRadius: "18px 18px 18px 4px", padding: "11px 15px", maxWidth: "82%",
   },
   userBubble: {
-    background: "rgba(200,166,255,0.13)", border: "1px solid rgba(200,166,255,0.22)",
+    background: "var(--aria-action-subtle)", border: "1px solid var(--aria-action)",
     borderRadius: "18px 18px 4px 18px", padding: "11px 15px", maxWidth: "78%",
   },
   bubbleText: {
@@ -1164,14 +1164,14 @@ const s = {
   },
   dot: {
     width: 7, height: 7, borderRadius: "50%",
-    background: "var(--accent-purple)", display: "inline-block",
+    background: "var(--aria-action)", display: "inline-block",
     animation: "blink 1.2s infinite",
   },
   endCard: {
     display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
     padding: "28px 24px", margin: "8px 0",
     background: "var(--surface)", borderRadius: "var(--radius)",
-    border: "1px solid rgba(200,166,255,0.13)", textAlign: "center",
+    border: "1px solid var(--border)", textAlign: "center",
     animation: "fadeUp .4s ease",
   },
   endTitle: { margin: 0, fontSize: 16, fontWeight: 600, color: "var(--text)" },
@@ -1183,13 +1183,13 @@ const s = {
   },
   savingOrb: {
     width: 10, height: 10, borderRadius: "50%",
-    background: "var(--accent-purple)",
+    background: "var(--aria-action)",
     animation: "pulse 1.2s ease-in-out infinite",
   },
 
   humorCard: {
     margin: "0 12px 8px", background: "var(--surface)",
-    border: "1px solid rgba(200,166,255,0.13)",
+    border: "1px solid var(--border)",
     borderRadius: "var(--radius-sm)", overflow: "hidden", flexShrink: 0,
   },
   humorToggle: {
@@ -1197,7 +1197,7 @@ const s = {
     justifyContent: "space-between", padding: "10px 14px",
     background: "none", border: "none", cursor: "pointer",
   },
-  humorToggleText: { fontSize: 13, color: "var(--accent-purple)", fontWeight: 500 },
+  humorToggleText: { fontSize: 13, color: "var(--aria-action)", fontWeight: 500 },
   humorBody:    { padding: "0 14px 14px", display: "flex", flexDirection: "column", gap: 10 },
   humorSection: {},
   humorLabel:   { fontSize: 11, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 },
@@ -1208,7 +1208,7 @@ const s = {
     padding: "10px 12px",
     paddingBottom: "calc(10px + env(safe-area-inset-bottom))",
     background: "var(--surface)",
-    borderTop: "1px solid rgba(200,166,255,0.1)",
+    borderTop: "1px solid var(--border)",
     flexShrink: 0,
   },
   inputWrapper: {
@@ -1234,8 +1234,8 @@ const s = {
   },
   btnPill: {
     padding: "12px 28px", borderRadius: 50, border: "none", cursor: "pointer",
-    background: "linear-gradient(135deg, var(--accent-purple), var(--accent-pink))",
-    color: "#0E0D14", fontSize: 14, fontWeight: 600,
+    background: "var(--aria-action)",
+    color: "var(--aria-action-text)", fontSize: 14, fontWeight: 600,
     fontFamily: "var(--font-body)", transition: "opacity 0.2s",
   },
 
@@ -1251,7 +1251,7 @@ const s = {
   modalCard: {
     background: "var(--surface)",
     borderRadius: "var(--radius)",
-    border: "1px solid rgba(200,166,255,0.15)",
+    border: "1px solid var(--border)",
     width: "100%", maxWidth: 420,
     overflow: "hidden",
     animation: "fadeUp .25s ease",
@@ -1260,7 +1260,7 @@ const s = {
     display: "flex", alignItems: "center",
     justifyContent: "space-between",
     padding: "16px 20px 12px",
-    borderBottom: "1px solid rgba(200,166,255,0.1)",
+    borderBottom: "1px solid var(--border)",
   },
   modalClose: {
     background: "none", border: "none",
@@ -1285,6 +1285,6 @@ const s = {
     display: "flex", alignItems: "center",
     justifyContent: "space-between",
     marginTop: 24, paddingTop: 16,
-    borderTop: "1px solid rgba(200,166,255,0.08)",
+    borderTop: "1px solid var(--border)",
   },
 };
