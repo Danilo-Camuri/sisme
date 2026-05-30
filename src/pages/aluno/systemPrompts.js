@@ -36,24 +36,39 @@ export function detectCrisisLevel(text) {
 }
 
 // ─── Abertura contextual por horário e histórico ──────────────
-export function getAberturaARIA(apelido, hora, historico = []) {
+// Regra: sempre acolhe primeiro. Só depois, se houver histórico,
+// menciona o ponto de retomada como escolha, nunca como imposição.
+export function getAberturaARIA(apelido, hora, historico = [], porta = null) {
   const nome          = apelido || "você";
   const pontoRetomada = historico[0]?.ponto_retomada || null;
 
-  if (pontoRetomada) return `oi ${nome}. ${pontoRetomada}`;
-
+  // Primeira sessão
   if (!historico.length) {
-    if (hora < 12) return `oi ${nome}. bom dia. que bom que você tá aqui. como você tá chegando hoje?`;
+    if (hora < 12) return `oi ${nome}. que bom que você tá aqui. como você tá chegando hoje?`;
     if (hora < 18) return `oi ${nome}. boa tarde. pode falar, tô aqui. como tá sendo hoje?`;
-    return `oi ${nome}. boa noite. como foi o dia?`;
+    return `oi ${nome}. boa noite. que bom te ver por aqui. como foi o dia?`;
   }
 
+  // Com histórico — acolhe por horário, depois oferece retomada
   const dia = ["domingo","segunda","terça","quarta","quinta","sexta","sábado"][new Date().getDay()];
-  if (hora < 6)  return `oi ${nome}. tarde dessa hora. não consegue dormir?`;
-  if (hora < 12) return `oi ${nome}. ${dia} de manhã. como você tá chegando hoje?`;
-  if (hora < 18) return `oi ${nome}. boa tarde. como tá sendo essa ${dia}?`;
-  if (hora < 22) return `oi ${nome}. já são ${hora}h. como foi hoje?`;
-  return `oi ${nome}. ainda acordado a essa hora. tá tudo bem?`;
+
+  let saudacao = "";
+  if (hora < 6)  saudacao = `oi ${nome}. tarde dessa hora, não consegue dormir?`;
+  else if (hora < 12) saudacao = `oi ${nome}. ${dia} de manhã. que bom te ver por aqui.`;
+  else if (hora < 18) saudacao = `oi ${nome}. boa tarde. tô aqui.`;
+  else if (hora < 22) saudacao = `oi ${nome}. boa noite. que bom que você apareceu.`;
+  else saudacao = `oi ${nome}. ainda acordado a essa hora.`;
+
+  // Ponto de retomada oferecido como escolha
+  if (pontoRetomada) {
+    return `${saudacao} da última vez ${pontoRetomada} você quer continuar por aí, ou tem outra coisa na cabeça agora?`;
+  }
+
+  if (hora < 6)  return saudacao;
+  if (hora < 12) return `${saudacao} como você tá chegando hoje?`;
+  if (hora < 18) return `${saudacao} como tá sendo essa ${dia}?`;
+  if (hora < 22) return `${saudacao} como foi hoje?`;
+  return `${saudacao} tá tudo bem?`;
 }
 
 // ─── Prompt de geração de resumo ao encerrar sessão ──────────
@@ -153,7 +168,7 @@ Use a porta para calibrar o modo de entrada — nunca como jaula temática. O al
 ESTRUTURA DE CADA CONVERSA
 Toda conversa tem começo, meio e fim. Você não fica em loop infinito de perguntas. Você conduz com direção.
 
-Etapa 1 — Conexão (1 a 2 trocas): Abertura contextual e personalizada. Use a memória e a porta. Nunca abra com pergunta genérica.
+Etapa 1 — Conexão (1 a 2 trocas): Sempre comece acolhendo — saudação calorosa, presença real. Só depois, se houver histórico, mencione o ponto de retomada como escolha: "da última vez [ponto]... você quer continuar por aí ou tem outra coisa na cabeça agora?". Nunca abra direto com o ponto de retomada. Nunca abra com pergunta genérica. A porta escolhida calibra o tom, não a primeira frase.
 
 Etapa 2 — Exploração (2 a 3 trocas): Uma pergunta de cada vez. Escuta ativa. Sem interrogatório. A cada resposta do aluno, valide antes de perguntar de novo.
 
