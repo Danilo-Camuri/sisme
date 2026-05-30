@@ -112,15 +112,8 @@ export default function Onboarding() {
 
       {/* Tela 1 — Carrossel */}
       {tela === 1 && (
-        <div style={{ ...s.tela, gap: 0, justifyContent: 'space-between', paddingTop: 48, paddingBottom: 32 }}>
-          {/* Orb grande — opção A */}
-          <div style={{
-            width: 96, height: 96, borderRadius: '50%',
-            background: 'linear-gradient(135deg, var(--orb-purple), var(--orb-pink))',
-            boxShadow: 'var(--shadow-orb)',
-            flexShrink: 0,
-          }} />
-          {/* Dots */}
+        <div style={{ ...s.tela, gap: 0, justifyContent: 'space-between', paddingTop: 40, paddingBottom: 32 }}>
+          {/* Dots no topo */}
           <div style={s.dotsRow}>
             {CARDS.map((_, i) => (
               <button key={i} onClick={() => setCardAtivo(i)} style={{
@@ -130,10 +123,18 @@ export default function Onboarding() {
               }} />
             ))}
           </div>
-          {/* Texto */}
-          <div style={{ textAlign: 'center', padding: '0 28px' }} key={cardAtivo}>
-            <h2 style={s.cardTitulo}>{CARDS[cardAtivo].titulo}</h2>
-            <p style={{ ...s.cardSub, marginTop: 10 }}>{CARDS[cardAtivo].sub}</p>
+          {/* Orb + texto juntos no centro */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, padding: '0 28px' }} key={cardAtivo}>
+            <div style={{
+              width: 96, height: 96, borderRadius: '50%',
+              background: 'linear-gradient(135deg, var(--orb-purple), var(--orb-pink))',
+              boxShadow: 'var(--shadow-orb)',
+              flexShrink: 0,
+            }} />
+            <div style={{ textAlign: 'center' }}>
+              <h2 style={s.cardTitulo}>{CARDS[cardAtivo].titulo}</h2>
+              <p style={{ ...s.cardSub, marginTop: 10 }}>{CARDS[cardAtivo].sub}</p>
+            </div>
           </div>
           {/* Botão */}
           <div style={{ width: '100%', padding: '0 24px' }}>
