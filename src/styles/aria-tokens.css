@@ -9,9 +9,9 @@
 ───────────────────────────────────────────────────────────── */
 
 :root {
-  /* Ação — botões primários */
-  --aria-action:        #18171C;
-  --aria-action-hover:  #2C2A35;
+  /* Ação — botões primários (azul fixo, funciona em qualquer tema) */
+  --aria-action:        #4F8EF7;
+  --aria-action-hover:  #378ADD;
   --aria-action-subtle: rgba(79,142,247,0.10);
   --aria-action-text:   #FFFFFF;
 
@@ -102,10 +102,10 @@
   --border-strong: rgba(240,238,248,0.15);
   --border-focus:  #6BA3FA;
 
-  /* Botão primário — claro sobre escuro */
-  --aria-action:        #F0EEF8;
-  --aria-action-hover:  #FFFFFF;
-  --aria-action-text:   #18171C;
+  /* Botão primário — azul fixo, mesmo no dark */
+  --aria-action:        #5A96F8;
+  --aria-action-hover:  #4F8EF7;
+  --aria-action-text:   #FFFFFF;
   --aria-action-subtle: rgba(79,142,247,0.15);
 
   /* Destaque azul — mais brilhante no escuro */
