@@ -1,4 +1,4 @@
-/* global.css — ARIA v2.0 */
+/* global.css — ARIA v3.0 */
 @import './aria-tokens.css';
 
 *, *::before, *::after {
@@ -49,7 +49,7 @@ input, textarea, select {
   font-family: var(--font);
 }
 
-a { color: var(--aria-action); text-decoration: none; }
+a { color: var(--accent); text-decoration: none; }
 
 /* Autocomplete */
 input:-webkit-autofill,
