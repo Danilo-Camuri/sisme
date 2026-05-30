@@ -180,8 +180,13 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
           crisisRef.current = cached.crisisLevel || 0;
           setCrisisLevel(cached.crisisLevel || 0);
         } else {
-          const abertura = getAberturaARIA(apelido, hora, comResumo);
-          setMessages([{ role: "assistant", content: abertura }]);
+          const aberturas = getAberturaARIA(apelido, hora, comResumo);
+          setMessages([{ role: "assistant", content: aberturas[0] }]);
+          if (aberturas[1]) {
+            setTimeout(() => {
+              setMessages(prev => [...prev, { role: "assistant", content: aberturas[1] }]);
+            }, 1400);
+          }
         }
       } catch {
         setError("Erro ao iniciar. Recarregue a página.");
@@ -414,8 +419,13 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
     console.log("[ARIA memória nova conversa]\n" + montarBlocoMemoria(apelido, comResumo));
     const sp = getARIASystemPrompt(apelido, comResumo);
     setSystemPrompt(sp);
-    const abertura = getAberturaARIA(apelido, new Date().getHours(), comResumo);
-    setMessages([{ role: "assistant", content: abertura }]);
+    const aberturas = getAberturaARIA(apelido, new Date().getHours(), comResumo);
+    setMessages([{ role: "assistant", content: aberturas[0] }]);
+    if (aberturas[1]) {
+      setTimeout(() => {
+        setMessages(prev => [...prev, { role: "assistant", content: aberturas[1] }]);
+      }, 1400);
+    }
   }
 
   if (initializing) return (
