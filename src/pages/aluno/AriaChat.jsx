@@ -707,14 +707,7 @@ function TelaEncerramento({ resumo, salvando, onNovaConversa }) {
 
         <div style={te.orbWrap}>
           <div style={te.orbGlow} />
-          <div style={te.orb}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,.85)" strokeWidth="1.5"/>
-              <path d="M8 14s1-2 4-2 4 2 4 2" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-              <circle cx="9"  cy="10" r="1.2" fill="white"/>
-              <circle cx="15" cy="10" r="1.2" fill="white"/>
-            </svg>
-          </div>
+          <div style={te.orb} />
         </div>
 
         {salvando ? (
@@ -789,7 +782,6 @@ const te = {
   orb: {
     width: 64, height: 64, borderRadius: "50%",
     background: "linear-gradient(135deg, var(--orb-purple), var(--orb-pink))",
-    display: "flex", alignItems: "center", justifyContent: "center",
     position: "relative",
     boxShadow: "var(--shadow-orb)",
   },
@@ -862,18 +854,10 @@ function ARIAOrb({ size = 36, pulse = false }) {
     <div style={{
       width: size, height: size, borderRadius: "50%",
       background: "linear-gradient(135deg, var(--orb-purple), var(--orb-pink))",
-      display: "flex", alignItems: "center", justifyContent: "center",
       flexShrink: 0,
       boxShadow: "var(--shadow-orb)",
       animation: pulse ? "orbGlow 2s ease-in-out infinite" : "none",
-    }}>
-      <svg width={size * .5} height={size * .5} viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,.85)" strokeWidth="1.5" />
-        <path d="M8 14s1-2 4-2 4 2 4 2" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-        <circle cx="9"  cy="10" r="1.2" fill="white" />
-        <circle cx="15" cy="10" r="1.2" fill="white" />
-      </svg>
-    </div>
+    }} />
   );
 }
 
