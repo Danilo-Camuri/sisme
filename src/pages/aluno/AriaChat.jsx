@@ -684,7 +684,7 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
                 disabled={!input.trim() || loading}
                 style={{
                   ...s.btnSend,
-                  background: input.trim() && !loading ? "var(--aria-action)" : "rgba(138,135,160,0.12)",
+                  background: input.trim() && !loading ? "#4F8EF7" : "rgba(138,135,160,0.12)",
                   cursor: input.trim() && !loading ? "pointer" : "default",
                 }}
                 aria-label="enviar"
@@ -995,9 +995,9 @@ const s = {
   alunoInfo: { display: "flex", alignItems: "center", gap: 10, overflow: "hidden", flex: 1 },
   alunoAvatar: {
     width: 32, height: 32, borderRadius: "50%",
-    background: "var(--aria-action)",
+    background: "#4F8EF7",
     display: "flex", alignItems: "center", justifyContent: "center",
-    fontSize: 14, fontWeight: 700, color: "var(--aria-action-text)", flexShrink: 0,
+    fontSize: 14, fontWeight: 700, color: "#FFFFFF", flexShrink: 0,
   },
   alunoNome: {
     fontSize: 13, fontWeight: 600, margin: 0, color: "var(--text)",
@@ -1112,8 +1112,8 @@ const s = {
   inputHint: { margin: "5px 0 0", fontSize: 10, color: "var(--muted)", textAlign: "center", letterSpacing: "0.04em" },
   btnPill: {
     padding: "12px 28px", borderRadius: 50, border: "none", cursor: "pointer",
-    background: "var(--aria-action)",
-    color: "var(--aria-action-text)", fontSize: 14, fontWeight: 600,
+    background: "#4F8EF7",
+    color: "#FFFFFF", fontSize: 14, fontWeight: 600,
     transition: "opacity 0.2s",
   },
   modalOverlay: {
