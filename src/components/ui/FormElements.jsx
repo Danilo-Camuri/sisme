@@ -121,8 +121,8 @@ export function Button({ children, variant = 'primary', loading, fullWidth, ...p
 
   const variants = {
     primary: {
-      background: 'var(--aria-action)',
-      color: 'var(--aria-action-text)',
+      background: '#4F8EF7',
+      color: '#FFFFFF',
       border: 'none'
     },
     ghost: {
