@@ -157,17 +157,9 @@ function ARIAOrb({ size = 38 }) {
     <div style={{
       width: size, height: size, borderRadius: "50%",
       background: "linear-gradient(135deg, var(--orb-purple), var(--orb-pink))",
-      display: "flex", alignItems: "center", justifyContent: "center",
       boxShadow: "var(--shadow-orb)",
       flexShrink: 0,
-    }}>
-      <svg width={size * 0.5} height={size * 0.5} viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,.85)" strokeWidth="1.5"/>
-        <path d="M8 14s1-2 4-2 4 2 4 2" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-        <circle cx="9"  cy="10" r="1.2" fill="white"/>
-        <circle cx="15" cy="10" r="1.2" fill="white"/>
-      </svg>
-    </div>
+    }} />
   );
 }
 
