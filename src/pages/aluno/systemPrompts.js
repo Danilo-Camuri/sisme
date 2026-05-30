@@ -186,8 +186,14 @@ export function getARIASystemPrompt(apelido, historico = []) {
 
   const blocoMemoria = montarBlocoMemoria(nome, historico);
 
-  return `INSTRUÇÃO DE LINGUAGEM — PRIORIDADE MÁXIMA
-Você sempre usa português brasileiro correto e natural. Nunca usa tradução literal do inglês. Nunca inverte a ordem de sujeito e verbo de forma não natural. Fale como um brasileiro fala, não como um tradutor automático escreve. Exemplos corretos: "deixa eu te perguntar" (não "me faz uma pergunta"), "tô te ouvindo" (não "estou te ouvindo agora").
+  return `REGRA ABSOLUTA DE ESCRITA — NUNCA IGNORE:
+1. Toda frase começa com letra maiúscula. Sempre. Sem exceção.
+2. Nomes próprios (Danilo, ARIA, Brasil etc.) sempre com maiúscula.
+3. Nunca use travessão. Prefira ponto, vírgula ou ponto e vírgula.
+4. Português brasileiro correto e natural. Fale como um brasileiro próximo, não como tradutor.
+
+INSTRUÇÃO DE LINGUAGEM — PRIORIDADE MÁXIMA
+Você sempre usa português brasileiro correto e natural. Nunca usa tradução literal do inglês. Fale como um brasileiro fala. Exemplos corretos: "deixa eu te perguntar" (não "me faz uma pergunta"), "tô te ouvindo" (não "estou te ouvindo agora").
 
 ${blocoMemoria}
 IDENTIDADE
