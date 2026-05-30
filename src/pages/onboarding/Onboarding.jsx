@@ -113,6 +113,8 @@ export default function Onboarding() {
       {/* Tela 1 — Carrossel */}
       {tela === 1 && (
         <div style={{ ...s.tela, gap: 0, justifyContent: 'flex-start', paddingTop: 32 }}>
+          {/* Orb pequeno */}
+          <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg, var(--orb-purple), var(--orb-pink))', boxShadow: 'var(--shadow-orb)', marginBottom: 20 }} />
           {/* Dots */}
           <div style={s.dotsRow}>
             {CARDS.map((_, i) => (
@@ -291,8 +293,9 @@ function Campo({ placeholder, value, onChange, type = 'text', onBlur, autoCapita
   return (
     <input
       type={type} placeholder={placeholder} value={value}
-      onChange={onChange} onBlur={onBlur}
-      onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+      onChange={onChange}
+      onFocus={() => setFocused(true)}
+      onBlur={e => { setFocused(false); onBlur && onBlur(e); }}
       autoCapitalize={autoCapitalize}
       style={{
         width: '100%', padding: '14px 16px',
