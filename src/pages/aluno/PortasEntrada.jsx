@@ -110,7 +110,7 @@ export default function PortasEntrada({ onEntrar }) {
           const isHov = hovered === porta.id;
           const isNaoEstouBem = porta.id === "Não estou bem";
           const corIcone = isNaoEstouBem
-            ? (isHov ? "var(--error)" : "var(--orb-pink)")
+            ? (isHov ? "var(--error)" : "var(--accent)")
             : (isHov ? "var(--aria-action)" : "var(--muted)");
 
           return (
@@ -118,8 +118,8 @@ export default function PortasEntrada({ onEntrar }) {
               key={porta.id}
               style={{
                 ...s.card,
-                background: isHov ? "var(--aria-action-subtle)" : "var(--surface)",
-                borderColor: isHov ? "var(--aria-action)" : "var(--border)",
+                background: isHov ? "var(--accent-subtle)" : "var(--surface)",
+                borderColor: isHov ? "var(--accent)" : "var(--border)",
                 transform: isHov ? "translateY(-2px)" : "translateY(0)",
                 boxShadow: isHov ? "var(--shadow-sm)" : "none",
               }}
@@ -138,7 +138,7 @@ export default function PortasEntrada({ onEntrar }) {
               </div>
               <p style={{
                 ...s.cardTitulo,
-                color: isHov ? "var(--aria-action)" : "var(--text)",
+                color: isHov ? "var(--accent)" : "var(--text)",
               }}>
                 {porta.titulo}
               </p>
