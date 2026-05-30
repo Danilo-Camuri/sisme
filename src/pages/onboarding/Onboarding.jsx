@@ -93,7 +93,7 @@ export default function Onboarding() {
         {Array.from({ length: TOTAL_TELAS }).map((_, i) => (
           <div key={i} style={{
             ...s.progressSeg,
-            background: i <= tela ? 'var(--aria-action)' : 'var(--border)',
+            background: i <= tela ? 'var(--accent)' : 'var(--border)',
           }} />
         ))}
       </div>
@@ -119,7 +119,7 @@ export default function Onboarding() {
               <button key={i} onClick={() => setCardAtivo(i)} style={{
                 ...s.dot,
                 width: i === cardAtivo ? 24 : 8,
-                background: i === cardAtivo ? 'var(--aria-action)' : 'var(--border-strong)',
+                background: i === cardAtivo ? 'var(--accent)' : 'var(--border-strong)',
               }} />
             ))}
           </div>
@@ -192,7 +192,7 @@ export default function Onboarding() {
 
             {validado && (
               <div style={{ ...s.fieldsCol, marginTop: 8 }}>
-                <p style={{ fontSize: 14, color: 'var(--aria-action)', fontWeight: 500 }}>
+                <p style={{ fontSize: 14, color: 'var(--accent)', fontWeight: 500 }}>
                   deu certo. agora cria seu acesso.
                 </p>
                 <Campo placeholder="seu e-mail" value={email} onChange={e => setEmail(e.target.value)} type="email" />
@@ -297,7 +297,7 @@ function Campo({ placeholder, value, onChange, type = 'text', onBlur, autoCapita
       style={{
         width: '100%', padding: '14px 16px',
         borderRadius: 'var(--radius-sm)',
-        border: `1.5px solid ${focused ? 'var(--aria-action)' : 'var(--border-strong)'}`,
+        border: `1.5px solid ${focused ? 'var(--accent)' : 'var(--border-strong)'}`,
         background: 'var(--surface)',
         color: 'var(--text)', fontSize: 15,
         boxSizing: 'border-box',
@@ -312,7 +312,7 @@ function Spinner() {
     <div style={{
       width: 18, height: 18,
       border: '2px solid var(--border)',
-      borderTop: '2px solid var(--aria-action)',
+      borderTop: '2px solid var(--accent)',
       borderRadius: '50%',
       animation: 'orbSpin 0.7s linear infinite',
     }} />
@@ -332,9 +332,9 @@ function Pill({ label, sel, onClick }) {
   return (
     <button onClick={onClick} style={{
       padding: '8px 16px', borderRadius: 'var(--radius-full)',
-      border: `1.5px solid ${sel ? 'var(--aria-action)' : 'var(--border-strong)'}`,
-      background: sel ? 'var(--aria-action-subtle)' : 'var(--surface)',
-      color: sel ? 'var(--aria-action)' : 'var(--text-2)',
+      border: `1.5px solid ${sel ? 'var(--accent)' : 'var(--border-strong)'}`,
+      background: sel ? 'var(--accent-subtle)' : 'var(--surface)',
+      color: sel ? 'var(--accent)' : 'var(--text-2)',
       fontSize: 14, fontWeight: sel ? 600 : 400,
       cursor: 'pointer', transition: 'all var(--transition-fast)',
       minHeight: 44,
@@ -402,8 +402,8 @@ const s = {
   consentItem: { display: 'flex', gap: 14, alignItems: 'flex-start' },
   consentNum: {
     width: 24, height: 24, borderRadius: '50%',
-    background: 'var(--aria-action-subtle)',
-    color: 'var(--aria-action)',
+    background: 'var(--accent-subtle)',
+    color: 'var(--accent)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     fontSize: 12, fontWeight: 700, flexShrink: 0,
   },
