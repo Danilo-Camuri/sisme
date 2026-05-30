@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
-import { Input, Button, Alert } from '../ui/FormElements'
+import { Input, Alert } from '../ui/FormElements'
 
 export default function Login() {
   const { login } = useAuth()
@@ -29,24 +29,26 @@ export default function Login() {
     <div style={pageStyle}>
       <div style={cardStyle}>
 
+        {/* Logo */}
         <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{
-            width: 40, height: 40, borderRadius: '50%',
-            background: 'linear-gradient(135deg, var(--orb-purple), var(--orb-pink))',
-            boxShadow: 'var(--shadow-orb)',
+            width: 44, height: 44, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #4F8EF7, #2DB87D)',
+            boxShadow: '0 0 24px rgba(79,142,247,0.35)',
             flexShrink: 0,
           }} />
-          <span style={{ fontSize: '20px', fontWeight: '700', letterSpacing: '-0.02em', color: 'var(--text)' }}>
+          <span style={{ fontSize: '22px', fontWeight: '700', letterSpacing: '-0.02em', color: 'var(--text)' }}>
             ARIA
           </span>
         </div>
 
+        {/* Título */}
         <div style={{ marginBottom: '28px' }}>
           <h1 style={{ fontSize: '22px', fontWeight: '600', marginBottom: '6px', color: 'var(--text)' }}>
-            bem-vindo de volta
+            Bem-vindo de volta
           </h1>
           <p style={{ color: 'var(--text-2)', fontSize: '14px' }}>
-            entre com sua conta para continuar
+            Entre com sua conta para continuar
           </p>
         </div>
 
@@ -76,24 +78,39 @@ export default function Login() {
           />
           <div style={{ textAlign: 'right', marginTop: '-8px' }}>
             <Link to="/recuperar-senha" style={{ fontSize: '13px', color: 'var(--text-2)' }}>
-              esqueci minha senha
+              Esqueci minha senha
             </Link>
           </div>
-          <Button
+
+          {/* Botão azul fixo — não depende de token nem de tema */}
+          <button
             type="submit"
-            fullWidth
-            loading={loading}
             disabled={loading}
-            style={{ marginTop: '8px' }}
+            style={{
+              marginTop: '8px',
+              width: '100%',
+              padding: '16px 24px',
+              borderRadius: '9999px',
+              border: 'none',
+              background: loading ? 'rgba(79,142,247,0.6)' : '#4F8EF7',
+              color: '#FFFFFF',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              minHeight: '52px',
+              boxSizing: 'border-box',
+              WebkitAppearance: 'none',
+              transition: 'opacity 0.15s ease',
+            }}
           >
-            entrar
-          </Button>
+            {loading ? 'Entrando...' : 'Entrar'}
+          </button>
         </form>
 
         <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: 'var(--text-2)' }}>
-          primeira vez aqui?{' '}
-          <Link to="/cadastro" style={{ color: 'var(--accent)', fontWeight: '600' }}>
-            criar conta
+          Primeira vez aqui?{' '}
+          <Link to="/cadastro" style={{ color: '#4F8EF7', fontWeight: '600' }}>
+            Criar conta
           </Link>
         </p>
 
