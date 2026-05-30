@@ -67,7 +67,7 @@ export function RecuperarSenha() {
         )}
 
         <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: 'var(--text-2)' }}>
-          <Link to="/login" style={{ color: 'var(--aria-action)' }}>Voltar para o login</Link>
+          <Link to="/login" style={{ color: 'var(--accent)' }}>Voltar para o login</Link>
         </p>
       </div>
     </div>
@@ -169,7 +169,7 @@ function Logo() {
       }}>
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
           <path d="M10 2C10 2 4 5 4 10.5C4 14 6.5 17 10 17C13.5 17 16 14 16 10.5C16 5 10 2 10 2Z" fill="white" fillOpacity="0.9"/>
-          <circle cx="10" cy="10.5" r="2.5" fill="var(--aria-action)"/>
+          <circle cx="10" cy="10.5" r="2.5" fill="var(--accent)"/>
         </svg>
       </div>
       <span style={{ fontSize: '20px', fontWeight: '600', letterSpacing: '-0.02em', color: 'var(--text)' }}>
