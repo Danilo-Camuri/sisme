@@ -459,7 +459,7 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
               {sessaoModal.ponto_retomada && (
                 <>
                   <p style={{ ...s.modalLabel, marginTop: 16 }}>ficou em aberto</p>
-                  <p style={{ ...s.modalText, color: "var(--aria-action)" }}>
+                  <p style={{ ...s.modalText, color: "var(--accent)" }}>
                     {sessaoModal.ponto_retomada}
                   </p>
                 </>
@@ -576,7 +576,7 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
           <div style={{
             ...s.progressFill,
             width: `${Math.min((trocas / MAX_TROCAS) * 100, 100)}%`,
-            background: trocas >= MAX_TROCAS - 3 ? "var(--error)" : "var(--aria-action)",
+            background: trocas >= MAX_TROCAS - 3 ? "var(--error)" : "var(--accent)",
           }} />
         </div>
 
@@ -618,7 +618,7 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
                   <p style={s.humorLabel}>humor</p>
                   <div style={s.humorOptions}>
                     {[["😶","1"],["😔","2"],["😐","3"],["🙂","4"],["😄","5"]].map(([e, v]) => (
-                      <button key={v} onClick={() => setHumorValue(Number(v))} style={{ ...s.humorOpt, background: humorValor === Number(v) ? "var(--aria-action-subtle)" : "transparent", border: humorValor === Number(v) ? "1.5px solid var(--aria-action)" : "1px solid transparent" }}>{e}</button>
+                      <button key={v} onClick={() => setHumorValue(Number(v))} style={{ ...s.humorOpt, background: humorValor === Number(v) ? "var(--accent-subtle)" : "transparent", border: humorValor === Number(v) ? "1.5px solid var(--accent)" : "1px solid transparent" }}>{e}</button>
                     ))}
                   </div>
                 </div>
@@ -626,7 +626,7 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
                   <p style={s.humorLabel}>energia</p>
                   <div style={s.humorOptions}>
                     {[["🪫","1"],["😴","2"],["😑","3"],["⚡","4"],["🔥","5"]].map(([e, v]) => (
-                      <button key={v} onClick={() => setEnergiaValue(Number(v))} style={{ ...s.humorOpt, background: energiaValor === Number(v) ? "var(--aria-action-subtle)" : "transparent", border: energiaValor === Number(v) ? "1.5px solid var(--aria-action)" : "1px solid transparent" }}>{e}</button>
+                      <button key={v} onClick={() => setEnergiaValue(Number(v))} style={{ ...s.humorOpt, background: energiaValor === Number(v) ? "var(--accent-subtle)" : "transparent", border: energiaValor === Number(v) ? "1.5px solid var(--accent)" : "1px solid transparent" }}>{e}</button>
                     ))}
                   </div>
                 </div>
@@ -642,7 +642,7 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
           <div style={s.inputArea}>
             <div style={{
               ...s.inputWrapper,
-              borderColor: input.trim() ? "var(--aria-action)" : "var(--border)",
+              borderColor: input.trim() ? "var(--accent)" : "var(--border)",
             }}>
               <textarea
                 ref={textareaRef}
@@ -735,7 +735,7 @@ function TelaEncerramento({ resumo, salvando, onNovaConversa }) {
                     <div style={{ ...te.cardRow, marginTop: 14 }}>
                       <span style={te.cardLabel}>ficou em aberto</span>
                     </div>
-                    <p style={{ ...te.cardTexto, color: "var(--aria-action)" }}>
+                    <p style={{ ...te.cardTexto, color: "var(--accent)" }}>
                       {resumo.ponto_retomada}
                     </p>
                   </>
@@ -933,7 +933,7 @@ const s = {
     borderBottom: "1px solid var(--border)",
   },
   sidebarBrand: { display: "flex", alignItems: "center", gap: 10 },
-  brandName: { fontSize: 18, fontWeight: 600, color: "var(--aria-action)", letterSpacing: "0.04em" },
+  brandName: { fontSize: 18, fontWeight: 600, color: "var(--accent)", letterSpacing: "0.04em" },
   sessionList: {
     flex: 1, overflowY: "auto",
     padding: "10px 8px",
@@ -947,7 +947,7 @@ const s = {
   sessionHeader: { display: "flex", alignItems: "center", gap: 6, marginBottom: 4 },
   badge: {
     fontSize: 10, fontWeight: 700,
-    color: "var(--aria-action)", background: "var(--aria-action-subtle)",
+    color: "var(--accent)", background: "var(--accent-subtle)",
     borderRadius: 4, padding: "1px 6px", letterSpacing: "0.04em",
   },
   sessionDate: { fontSize: 11, color: "var(--muted)" },
@@ -957,7 +957,7 @@ const s = {
     display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
   },
   sessionRetomada: {
-    fontSize: 11, color: "var(--aria-action)", margin: "4px 0 0",
+    fontSize: 11, color: "var(--accent)", margin: "4px 0 0",
     lineHeight: 1.4, fontStyle: "italic",
     overflow: "hidden", textOverflow: "ellipsis",
     display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical",
@@ -1003,7 +1003,7 @@ const s = {
     minWidth: 36, minHeight: 36,
   },
   headerCenter: { display: "flex", alignItems: "center", gap: 10, flex: 1, justifyContent: "center" },
-  headerName: { margin: 0, fontSize: 15, fontWeight: 600, color: "var(--aria-action)", letterSpacing: "0.04em" },
+  headerName: { margin: 0, fontSize: 15, fontWeight: 600, color: "var(--accent)", letterSpacing: "0.04em" },
   onlineRow: { display: "flex", alignItems: "center", gap: 5 },
   onlineDot: { width: 7, height: 7, borderRadius: "50%", background: "var(--success)", animation: "pulse 2s ease-in-out infinite" },
   onlineText: { fontSize: 11, color: "var(--success)", letterSpacing: "0.04em" },
@@ -1027,13 +1027,13 @@ const s = {
     borderRadius: "18px 18px 18px 4px", padding: "11px 15px", maxWidth: "82%",
   },
   userBubble: {
-    background: "var(--aria-action-subtle)", border: "1px solid var(--aria-action)",
+    background: "var(--accent-subtle)", border: "1px solid var(--accent)",
     borderRadius: "18px 18px 4px 18px", padding: "11px 15px", maxWidth: "78%",
   },
   bubbleText: { margin: 0, fontSize: 15, lineHeight: 1.65, whiteSpace: "pre-wrap", wordBreak: "break-word" },
   dot: {
     width: 7, height: 7, borderRadius: "50%",
-    background: "var(--aria-action)", display: "inline-block",
+    background: "var(--accent)", display: "inline-block",
     animation: "blink 1.2s infinite",
   },
   saving:   { textAlign: "center", fontSize: 12, color: "var(--muted)", animation: "pulse 1.2s infinite" },
@@ -1043,7 +1043,7 @@ const s = {
   },
   savingOrb: {
     width: 10, height: 10, borderRadius: "50%",
-    background: "var(--aria-action)", animation: "pulse 1.2s ease-in-out infinite",
+    background: "var(--accent)", animation: "pulse 1.2s ease-in-out infinite",
   },
   humorCard: {
     margin: "0 12px 8px", background: "var(--surface)",
@@ -1055,7 +1055,7 @@ const s = {
     justifyContent: "space-between", padding: "10px 14px",
     background: "none", border: "none", cursor: "pointer",
   },
-  humorToggleText: { fontSize: 13, color: "var(--aria-action)", fontWeight: 500 },
+  humorToggleText: { fontSize: 13, color: "var(--accent)", fontWeight: 500 },
   humorBody:    { padding: "0 14px 14px", display: "flex", flexDirection: "column", gap: 10 },
   humorSection: {},
   humorLabel:   { fontSize: 11, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 },
