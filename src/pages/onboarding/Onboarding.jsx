@@ -113,7 +113,7 @@ export default function Onboarding() {
       {/* Tela 1 — Carrossel */}
       {tela === 1 && (
         <div style={{ ...s.tela, gap: 0, justifyContent: 'space-between', paddingTop: 40, paddingBottom: 32 }}>
-          {/* Dots no topo */}
+          {/* Dots navegáveis */}
           <div style={s.dotsRow}>
             {CARDS.map((_, i) => (
               <button key={i} onClick={() => setCardAtivo(i)} style={{
@@ -136,9 +136,17 @@ export default function Onboarding() {
               <p style={{ ...s.cardSub, marginTop: 10 }}>{CARDS[cardAtivo].sub}</p>
             </div>
           </div>
-          {/* Botão */}
+          {/* Botão — avança card ou sai do carrossel */}
           <div style={{ width: '100%', padding: '0 24px' }}>
-            <Btn onClick={proximaTela}>quero isso</Btn>
+            <Btn onClick={() => {
+              if (cardAtivo < CARDS.length - 1) {
+                setCardAtivo(c => c + 1)
+              } else {
+                proximaTela()
+              }
+            }}>
+              {cardAtivo < CARDS.length - 1 ? 'próximo' : 'quero isso'}
+            </Btn>
           </div>
         </div>
       )}
