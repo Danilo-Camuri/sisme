@@ -286,12 +286,14 @@ function Btn({ children, onClick, disabled = false, style = {} }) {
     <button
       onClick={disabled ? undefined : onClick}
       style={{
-        width: '100%', padding: '14px 24px',
+        width: '100%', padding: '16px 24px',
         borderRadius: 'var(--radius-full)',
         border: 'none',
-        background: disabled ? 'var(--border)' : 'var(--aria-action)',
-        color: disabled ? 'var(--muted)' : 'var(--aria-action-text)',
-        fontSize: 15, fontWeight: 600, cursor: disabled ? 'default' : 'pointer',
+        background: disabled ? 'rgba(148,144,168,0.2)' : '#4F8EF7',
+        color: disabled ? 'var(--muted)' : '#FFFFFF',
+        fontSize: 16, fontWeight: 600, cursor: disabled ? 'default' : 'pointer',
+        minHeight: 52, boxSizing: 'border-box',
+        WebkitAppearance: 'none',
         transition: 'all var(--transition-fast)',
         ...style,
       }}
