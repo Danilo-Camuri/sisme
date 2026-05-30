@@ -206,6 +206,7 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
 
   const saveSession = useCallback(async (finalMessages, nivelFinal) => {
     if (!aluno || finalMessages.length < 2) return;
+    if (savingSession) return; // guard contra chamadas duplas
     setSavingSession(true);
     try {
       const historicoTexto = finalMessages
@@ -213,9 +214,12 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
         .map(m => `${m.role === "user" ? "Aluno" : "ARIA"}: ${m.content}`)
         .join("\n");
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000);
       const res = await fetch("/.netlify/functions/anthropic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           model: MODEL,
           max_tokens: 300,
@@ -226,6 +230,7 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
         }),
       });
 
+      clearTimeout(timeoutId);
       const data    = await res.json();
       const rawText = data.content?.map(b => b.text || "").join("").trim() || "";
       console.log("[ARIA resumo] raw:", rawText);
@@ -282,9 +287,18 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
       }
 
       clearLocal(aluno.id);
-    } catch (e) { console.error("[ARIA] saveSession:", e); }
-    finally     { setSavingSession(false); }
-  }, [aluno]);
+    } catch (e) {
+      console.error("[ARIA] saveSession:", e);
+      // Garante que a tela de encerramento aparece mesmo com erro
+      setResumoFinal({
+        resumo_sessao: "não consegui gerar o resumo dessa sessão.",
+        construto_cortex: null,
+        ponto_retomada: null,
+        nivel_crise: nivelFinal,
+      });
+    }
+    finally { setSavingSession(false); }
+  }, [aluno, savingSession]);
 
   async function sendMessage() {
     if (!input.trim() || loading || sessionEnded) return;
