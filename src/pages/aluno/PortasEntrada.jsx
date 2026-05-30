@@ -1,33 +1,26 @@
 import { useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 
-// ─── Ícones SVG fiéis ao design do cofundador
-//     viewBox 0 0 24 24 | stroke currentColor | strokeWidth 1.5
-//     strokeLinecap round | strokeLinejoin round | fill none
-//     Tamanho renderizado 28x28 | Área de toque 44x44
-//     "Não estou bem": stroke recebe cor como prop (orb-pink em repouso, error em hover)
-
-// Escola — livro aberto com dobra no canto inferior direito
+// Escola — livro aberto limpo
 const IcoEscola = () => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M2 6.5C2 6.5 7 5 12 5s10 1.5 10 1.5V20s-5-1.5-10-1.5S2 20 2 20V6.5z" />
-    <path d="M12 5v13.5" />
-    <path d="M18.5 18.5L20 20" />
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    <path d="M8 7h8M8 11h6" />
   </svg>
 );
 
-// Família — telhado triangular com chaminé e base horizontal
+// Família — casa simples
 const IcoFamilia = () => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M2 20h20" />
-    <path d="M4 20L12 6l8 14" />
-    <rect x="15" y="9" width="3" height="5" />
+    <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" />
+    <path d="M9 21V12h6v9" />
   </svg>
 );
 
-// Amizades — dois círculos sobrepostos estilo Venn
+// Amizades — dois círculos Venn
 const IcoAmizades = () => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -36,44 +29,43 @@ const IcoAmizades = () => (
   </svg>
 );
 
-// Meu futuro — círculo com agulha diamante diagonal
+// Meu futuro — bússola
 const IcoFuturo = () => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="9.5" />
-    <path d="M7.5 16.5L12 8l4.5 8.5" />
-    <path d="M7.5 16.5L16.5 7.5" />
+    <circle cx="12" cy="12" r="9" />
+    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
   </svg>
 );
 
-// Não estou bem — linha ondulada horizontal (stroke via prop para cor diferente)
+// Não estou bem — linha ondulada
 const IcoNaoEstouBem = ({ cor }) => (
   <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
     stroke={cor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M2 12 C4 8.5, 6 15.5, 8 12 C10 8.5, 12 15.5, 14 12 C16 8.5, 18 15.5, 20 12" />
+    <path d="M2 12c2-4 4 4 6 0s4-4 6 0 4 4 6 0" />
   </svg>
 );
 
-// Só quero conversar — três pontos preenchidos centralizados
+// Só quero conversar — balão de fala
 const IcoConversar = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
-    <circle cx="7"  cy="12" r="2" />
-    <circle cx="12" cy="12" r="2" />
-    <circle cx="17" cy="12" r="2" />
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    <circle cx="9" cy="10" r="0.8" fill="currentColor" />
+    <circle cx="12" cy="10" r="0.8" fill="currentColor" />
+    <circle cx="15" cy="10" r="0.8" fill="currentColor" />
   </svg>
 );
 
-// ─── Definição das 6 portas ────────────────────────────────────
 const PORTAS = [
-  { id: "Escola",                    titulo: "escola",                    sub: "estudos, provas, ENEM, professores",     Ico: IcoEscola },
-  { id: "Família",                   titulo: "família",                   sub: "pais, irmãos, casa, pressão",            Ico: IcoFamilia },
-  { id: "Amizades e relacionamentos",titulo: "amizades",                  sub: "amigos, crush, conflitos, vínculos",     Ico: IcoAmizades },
-  { id: "Meu futuro",                titulo: "meu futuro",                sub: "carreira, faculdade, propósito",         Ico: IcoFuturo },
-  { id: "Não estou bem",             titulo: "não estou bem",             sub: "ansiedade, tristeza, esgotamento",       Ico: null },
-  { id: "Só quero conversar",        titulo: "só quero conversar",        sub: "sem assunto definido, só falar",         Ico: IcoConversar },
+  { id: "Escola",                     titulo: "escola",           sub: "estudos, provas, ENEM, professores",  Ico: IcoEscola },
+  { id: "Família",                    titulo: "família",          sub: "pais, irmãos, casa, pressão",         Ico: IcoFamilia },
+  { id: "Amizades e relacionamentos", titulo: "amizades",         sub: "amigos, crush, conflitos, vínculos",  Ico: IcoAmizades },
+  { id: "Meu futuro",                 titulo: "meu futuro",       sub: "carreira, faculdade, propósito",      Ico: IcoFuturo },
+  { id: "Não estou bem",              titulo: "não estou bem",    sub: "ansiedade, tristeza, esgotamento",    Ico: null },
+  { id: "Só quero conversar",         titulo: "só quero conversar", sub: "sem assunto definido, só falar",   Ico: IcoConversar },
 ];
 
-// ─── Componente ───────────────────────────────────────────────
 export default function PortasEntrada({ onEntrar }) {
   const { aluno, logout } = useAuth();
   const [hovered, setHovered] = useState(null);
@@ -84,8 +76,6 @@ export default function PortasEntrada({ onEntrar }) {
 
   return (
     <div style={s.shell}>
-
-      {/* Header */}
       <div style={s.header}>
         <ARIAOrb size={38} />
         <button onClick={logout} style={s.btnLogout} aria-label="Sair">
@@ -98,20 +88,18 @@ export default function PortasEntrada({ onEntrar }) {
         </button>
       </div>
 
-      {/* Saudação */}
       <div style={s.saudacaoWrap}>
         <p style={s.saudacao}>{saudacao}, {apelido}.</p>
         <p style={s.pergunta}>sobre o que você quer falar hoje?</p>
       </div>
 
-      {/* Grid de portas */}
       <div style={s.grid}>
         {PORTAS.map((porta) => {
           const isHov = hovered === porta.id;
           const isNaoEstouBem = porta.id === "Não estou bem";
           const corIcone = isNaoEstouBem
-            ? (isHov ? "var(--error)" : "var(--accent)")
-            : (isHov ? "var(--aria-action)" : "var(--muted)");
+            ? (isHov ? "var(--error)" : "var(--muted)")
+            : (isHov ? "var(--accent)" : "var(--muted)");
 
           return (
             <button
@@ -129,17 +117,13 @@ export default function PortasEntrada({ onEntrar }) {
               onTouchEnd={() => { setHovered(null); onEntrar(porta.id); }}
               onClick={() => onEntrar(porta.id)}
             >
-              {/* Área de toque mínima 44x44 garantida pelo padding do card */}
               <div style={{ color: corIcone, transition: "color var(--transition-fast)" }}>
                 {isNaoEstouBem
                   ? <IcoNaoEstouBem cor={corIcone} />
                   : porta.Ico && <porta.Ico />
                 }
               </div>
-              <p style={{
-                ...s.cardTitulo,
-                color: isHov ? "var(--accent)" : "var(--text)",
-              }}>
+              <p style={{ ...s.cardTitulo, color: isHov ? "var(--accent)" : "var(--text)" }}>
                 {porta.titulo}
               </p>
               <p style={s.cardSub}>{porta.sub}</p>
@@ -151,7 +135,6 @@ export default function PortasEntrada({ onEntrar }) {
   );
 }
 
-// ─── Orb ─────────────────────────────────────────────────────
 function ARIAOrb({ size = 38 }) {
   return (
     <div style={{
@@ -163,67 +146,38 @@ function ARIAOrb({ size = 38 }) {
   );
 }
 
-// ─── Estilos ──────────────────────────────────────────────────
 const s = {
   shell: {
-    minHeight: "100dvh",
-    display: "flex",
-    flexDirection: "column",
-    background: "var(--bg)",
-    color: "var(--text)",
+    minHeight: "100dvh", display: "flex", flexDirection: "column",
+    background: "var(--bg)", color: "var(--text)",
     paddingBottom: "env(safe-area-inset-bottom)",
   },
   header: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
+    display: "flex", alignItems: "center", justifyContent: "space-between",
     padding: "var(--space-4) var(--space-5)",
     paddingTop: "calc(var(--space-4) + env(safe-area-inset-top))",
   },
   btnLogout: {
-    background: "none", border: "none",
-    cursor: "pointer", padding: "var(--space-2)",
-    borderRadius: "var(--radius-sm)",
+    background: "none", border: "none", cursor: "pointer",
+    padding: "var(--space-2)", borderRadius: "var(--radius-sm)",
     display: "flex", alignItems: "center", justifyContent: "center",
     minWidth: 44, minHeight: 44,
   },
-  saudacaoWrap: {
-    padding: "var(--space-6) var(--space-6) var(--space-5)",
-    animation: "fadeUp 0.35s ease",
-  },
-  saudacao: {
-    fontSize: 26, fontWeight: 600,
-    color: "var(--text)", margin: 0, lineHeight: 1.2,
-  },
-  pergunta: {
-    fontSize: 15, color: "var(--muted)",
-    margin: "var(--space-2) 0 0", fontWeight: 400,
-  },
+  saudacaoWrap: { padding: "var(--space-6) var(--space-6) var(--space-5)", animation: "fadeUp 0.35s ease" },
+  saudacao: { fontSize: 26, fontWeight: 600, color: "var(--text)", margin: 0, lineHeight: 1.2 },
+  pergunta: { fontSize: 15, color: "var(--muted)", margin: "var(--space-2) 0 0", fontWeight: 400 },
   grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, 1fr)",
-    gap: "var(--space-3)",
-    padding: "0 var(--space-4) var(--space-8)",
-    flex: 1,
-    animation: "fadeUp 0.40s ease",
+    display: "grid", gridTemplateColumns: "repeat(2, 1fr)",
+    gap: "var(--space-3)", padding: "0 var(--space-4) var(--space-8)",
+    flex: 1, animation: "fadeUp 0.40s ease",
   },
   card: {
-    display: "flex", flexDirection: "column",
-    alignItems: "flex-start", gap: "var(--space-2)",
-    padding: "var(--space-4)",
-    borderRadius: "var(--radius-md)",
-    border: "1.5px solid",
+    display: "flex", flexDirection: "column", alignItems: "flex-start",
+    gap: "var(--space-2)", padding: "var(--space-4)",
+    borderRadius: "var(--radius-md)", border: "1.5px solid",
     cursor: "pointer", textAlign: "left",
-    transition: "all var(--transition-fast)",
-    minHeight: 110,
+    transition: "all var(--transition-fast)", minHeight: 110,
   },
-  cardTitulo: {
-    fontSize: 14, fontWeight: 600,
-    margin: 0, lineHeight: 1.2,
-    transition: "color var(--transition-fast)",
-  },
-  cardSub: {
-    fontSize: 12, color: "var(--muted)",
-    margin: 0, lineHeight: 1.4, fontWeight: 400,
-  },
+  cardTitulo: { fontSize: 14, fontWeight: 600, margin: 0, lineHeight: 1.2, transition: "color var(--transition-fast)" },
+  cardSub: { fontSize: 12, color: "var(--muted)", margin: 0, lineHeight: 1.4, fontWeight: 400 },
 };
