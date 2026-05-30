@@ -3,13 +3,13 @@
    Paleta: Azul + Verde. Sem rosa. Neutro de gênero.
    REGRAS INEGOCIÁVEIS:
    - --orb-* SOMENTE no gradiente do orb da ARIA
-   - --aria-action em botões, bordas de foco, textos de ação
-   - --aria-action-text em textos sobre botões primários
+   - --aria-action em botões primários
+   - --aria-action-text no texto sobre botões primários
    - Sem valores hex hardcoded nos componentes
 ───────────────────────────────────────────────────────────── */
 
 :root {
-  /* Ação — botões primários, bordas de foco, textos de ação */
+  /* Ação — botões primários */
   --aria-action:        #18171C;
   --aria-action-hover:  #2C2A35;
   --aria-action-subtle: rgba(79,142,247,0.10);
@@ -84,18 +84,44 @@
   --font: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
-/* ── Tema escuro ─────────────────────────────────────────────── */
+/* ── Tema escuro — ativa automaticamente após 18h via useAutoTheme ── */
 [data-theme="dark"] {
-  --bg:            #1A1825;
-  --surface:       #221F30;
-  --surface-2:     #2A2638;
-  --elevated:      #2F2B40;
-  --text:          #F0EEF8;
-  --text-2:        #B8B4CC;
-  --muted:         #7A7690;
+  /* Superfícies */
+  --bg:        #1A1825;
+  --surface:   #221F30;
+  --surface-2: #2A2638;
+  --elevated:  #2F2B40;
+
+  /* Texto */
+  --text:   #F0EEF8;
+  --text-2: #B8B4CC;
+  --muted:  #7A7690;
+
+  /* Bordas — mais sutis no escuro */
   --border:        rgba(240,238,248,0.08);
   --border-strong: rgba(240,238,248,0.15);
+  --border-focus:  #6BA3FA;
+
+  /* Botão primário — claro sobre escuro */
   --aria-action:        #F0EEF8;
   --aria-action-hover:  #FFFFFF;
-  --accent-text:   #85B7EB;
+  --aria-action-text:   #18171C;
+  --aria-action-subtle: rgba(79,142,247,0.15);
+
+  /* Destaque azul — mais brilhante no escuro */
+  --accent:        #6BA3FA;
+  --accent-hover:  #4F8EF7;
+  --accent-subtle: rgba(107,163,250,0.15);
+  --accent-text:   #A8C8FD;
+
+  /* Semânticas com mais opacidade no escuro */
+  --success-bg: rgba(45,184,125,0.18);
+  --error-bg:   rgba(224,82,82,0.18);
+  --warning-bg: rgba(240,160,48,0.18);
+
+  /* Sombras invertidas — mais escuras e pronunciadas */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.20);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.25);
+  --shadow-lg:  0 8px 32px rgba(0,0,0,0.45), 0 4px 8px rgba(0,0,0,0.30);
+  --shadow-orb: 0 0 48px rgba(79,142,247,0.40), 0 0 96px rgba(45,184,125,0.20);
 }
