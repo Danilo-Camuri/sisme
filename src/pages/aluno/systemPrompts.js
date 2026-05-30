@@ -36,44 +36,86 @@ export function detectCrisisLevel(text) {
 }
 
 // ─── Abertura contextual por horário e histórico ──────────────
-// Retorna ARRAY de mensagens. Sempre 2 quando há histórico:
-// [0] acolhimento puro, [1] ponto de retomada como escolha (após delay).
-// Sem histórico: array com 1 mensagem só.
+// Retorna ARRAY de mensagens:
+// [0] acolhimento com variações (nunca repete igual)
+// [1] segunda mensagem — ponto de retomada ou pergunta aberta
 export function getAberturaARIA(apelido, hora, historico = [], porta = null) {
   const nome          = apelido || "você";
   const pontoRetomada = historico[0]?.ponto_retomada || null;
   const dia = ["domingo","segunda","terça","quarta","quinta","sexta","sábado"][new Date().getDay()];
+  const idx = new Date().getMinutes() % 4; // sorteia variação pela hora
+
+  // ── Bancos de variações de acolhimento por período ────────────
+  const variacoes = {
+    noiteAlta: [
+      `oi ${nome}. essa hora... que bom que você veio.`,
+      `oi ${nome}. tô aqui, pode falar.`,
+      `oi ${nome}. que bom que você apareceu.`,
+      `oi ${nome}. não dormindo? tô aqui.`,
+    ],
+    manha: [
+      `oi ${nome}. bom dia. que bom te ver por aqui.`,
+      `oi ${nome}. bom dia. tô aqui.`,
+      `oi ${nome}. começando a ${dia} junto. que bom.`,
+      `oi ${nome}. bom dia. pode falar.`,
+    ],
+    tarde: [
+      `oi ${nome}. boa tarde. que bom que você apareceu.`,
+      `oi ${nome}. boa tarde. tô aqui.`,
+      `oi ${nome}. que bom te ver por aqui nessa ${dia}.`,
+      `oi ${nome}. boa tarde. pode falar.`,
+    ],
+    noite: [
+      `oi ${nome}. boa noite. que bom que você veio.`,
+      `oi ${nome}. boa noite. tô aqui.`,
+      `oi ${nome}. que bom te ver por aqui essa noite.`,
+      `oi ${nome}. boa noite. pode falar.`,
+    ],
+  };
+
+  function sortearAcolhimento() {
+    if (hora < 6)  return variacoes.noiteAlta[idx];
+    if (hora < 12) return variacoes.manha[idx];
+    if (hora < 18) return variacoes.tarde[idx];
+    if (hora < 22) return variacoes.noite[idx];
+    return variacoes.noiteAlta[idx];
+  }
 
   // ── Primeira sessão — sem histórico ──────────────────────────
   if (!historico.length) {
-    let msg = "";
-    if (hora < 6)  msg = `oi ${nome}. que bom que você tá aqui. pode falar.`;
-    else if (hora < 12) msg = `oi ${nome}. bom dia. que bom que você tá aqui. como você tá chegando hoje?`;
-    else if (hora < 18) msg = `oi ${nome}. boa tarde. pode falar, tô aqui. como tá sendo hoje?`;
-    else msg = `oi ${nome}. boa noite. que bom te ver por aqui. como foi o dia?`;
-    return [msg];
+    return [sortearAcolhimento()];
   }
 
-  // ── Com histórico — mensagem 1: acolhimento puro ─────────────
-  let acolhimento = "";
-  if (hora < 6)  acolhimento = `oi ${nome}. essa hora da noite... que bom que você veio. tô aqui.`;
-  else if (hora < 12) acolhimento = `oi ${nome}. bom dia. que bom te ver por aqui nessa ${dia} de manhã.`;
-  else if (hora < 18) acolhimento = `oi ${nome}. boa tarde. que bom que você apareceu. tô aqui.`;
-  else if (hora < 22) acolhimento = `oi ${nome}. boa noite. que bom que você veio.`;
-  else acolhimento = `oi ${nome}. ainda acordado a essa hora. tô aqui.`;
+  // ── Com histórico ─────────────────────────────────────────────
+  const acolhimento = sortearAcolhimento();
 
-  // ── Mensagem 2: pergunta sobre o que quer falar hoje ─────────
-  let pergunta = "";
+  // Mensagem 2 com ponto de retomada — escrito de forma natural
+  let segunda = "";
   if (pontoRetomada) {
-    pergunta = `da última vez a gente ficou em: "${pontoRetomada}". você quer continuar por aí, ou tem outra coisa na cabeça agora?`;
+    const intros = [
+      `da última vez ficou uma coisa no ar:`,
+      `antes de começar, lembro que ficou em aberto:`,
+      `ficou uma coisa pendente da nossa última conversa:`,
+      `tinha ficado algo em aberto:`,
+    ];
+    const fechos = [
+      `você quer continuar por aí, ou prefere falar de outra coisa hoje?`,
+      `quer retomar isso, ou tem algo novo na cabeça agora?`,
+      `faz sentido continuar por aí, ou mudou alguma coisa?`,
+      `você quer pegar de onde parou, ou começar por outro lado?`,
+    ];
+    segunda = `${intros[idx]} ${pontoRetomada}. ${fechos[idx]}`;
   } else {
-    if (hora < 12) pergunta = `como você tá chegando hoje?`;
-    else if (hora < 18) pergunta = `como tá sendo essa ${dia}?`;
-    else if (hora < 22) pergunta = `como foi hoje?`;
-    else pergunta = `tá tudo bem?`;
+    const abertas = [
+      `como você tá chegando hoje?`,
+      `o que tá na cabeça?`,
+      `como foi desde a última vez?`,
+      `por onde você quer começar hoje?`,
+    ];
+    segunda = abertas[idx];
   }
 
-  return [acolhimento, pergunta];
+  return [acolhimento, segunda];
 }
 
 // ─── Prompt de geração de resumo ao encerrar sessão ──────────
