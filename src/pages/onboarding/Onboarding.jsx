@@ -112,9 +112,14 @@ export default function Onboarding() {
 
       {/* Tela 1 — Carrossel */}
       {tela === 1 && (
-        <div style={{ ...s.tela, gap: 0, justifyContent: 'flex-start', paddingTop: 32 }}>
-          {/* Orb pequeno */}
-          <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg, var(--orb-purple), var(--orb-pink))', boxShadow: 'var(--shadow-orb)', marginBottom: 20 }} />
+        <div style={{ ...s.tela, gap: 0, justifyContent: 'space-between', paddingTop: 48, paddingBottom: 32 }}>
+          {/* Orb grande — opção A */}
+          <div style={{
+            width: 96, height: 96, borderRadius: '50%',
+            background: 'linear-gradient(135deg, var(--orb-purple), var(--orb-pink))',
+            boxShadow: 'var(--shadow-orb)',
+            flexShrink: 0,
+          }} />
           {/* Dots */}
           <div style={s.dotsRow}>
             {CARDS.map((_, i) => (
@@ -125,14 +130,13 @@ export default function Onboarding() {
               }} />
             ))}
           </div>
-          {/* Card */}
-          <div style={s.carrosselCard} key={cardAtivo}>
+          {/* Texto */}
+          <div style={{ textAlign: 'center', padding: '0 28px' }} key={cardAtivo}>
             <h2 style={s.cardTitulo}>{CARDS[cardAtivo].titulo}</h2>
-            <p style={s.cardSub}>{CARDS[cardAtivo].sub}</p>
-            <Seta dir="left"  onClick={() => setCardAtivo(c => (c - 1 + CARDS.length) % CARDS.length)} />
-            <Seta dir="right" onClick={() => setCardAtivo(c => (c + 1) % CARDS.length)} />
+            <p style={{ ...s.cardSub, marginTop: 10 }}>{CARDS[cardAtivo].sub}</p>
           </div>
-          <div style={s.footerFixo}>
+          {/* Botão */}
+          <div style={{ width: '100%', padding: '0 24px' }}>
             <Btn onClick={proximaTela}>quero isso</Btn>
           </div>
         </div>
