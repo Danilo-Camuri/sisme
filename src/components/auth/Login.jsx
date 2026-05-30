@@ -28,69 +28,95 @@ export default function Login() {
   return (
     <div style={pageStyle}>
       <div style={cardStyle}>
-        <Logo />
-        <div style={{ marginBottom: 'var(--space-8)' }}>
-          <h1 style={{ fontSize: '22px', marginBottom: '6px', color: 'var(--text)' }}>
+
+        <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: '50%',
+            background: 'linear-gradient(135deg, var(--orb-purple), var(--orb-pink))',
+            boxShadow: 'var(--shadow-orb)',
+            flexShrink: 0,
+          }} />
+          <span style={{ fontSize: '20px', fontWeight: '700', letterSpacing: '-0.02em', color: 'var(--text)' }}>
+            ARIA
+          </span>
+        </div>
+
+        <div style={{ marginBottom: '28px' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: '600', marginBottom: '6px', color: 'var(--text)' }}>
             bem-vindo de volta
           </h1>
           <p style={{ color: 'var(--text-2)', fontSize: '14px' }}>
             entre com sua conta para continuar
           </p>
         </div>
-        {error && <Alert type="error" style={{ marginBottom: 'var(--space-5)' }}>{error}</Alert>}
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <Input label="E-mail" type="email" value={form.email} onChange={set('email')}
-            placeholder="seu@email.com" autoComplete="email" autoFocus />
-          <Input label="Senha" type="password" value={form.senha} onChange={set('senha')}
-            placeholder="••••••••" autoComplete="current-password" />
+
+        {error && (
+          <div style={{ marginBottom: '20px' }}>
+            <Alert type="error">{error}</Alert>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <Input
+            label="E-mail"
+            type="email"
+            value={form.email}
+            onChange={set('email')}
+            placeholder="seu@email.com"
+            autoComplete="email"
+            autoFocus
+          />
+          <Input
+            label="Senha"
+            type="password"
+            value={form.senha}
+            onChange={set('senha')}
+            placeholder="••••••••"
+            autoComplete="current-password"
+          />
           <div style={{ textAlign: 'right', marginTop: '-8px' }}>
             <Link to="/recuperar-senha" style={{ fontSize: '13px', color: 'var(--text-2)' }}>
               esqueci minha senha
             </Link>
           </div>
-          <Button type="submit" fullWidth loading={loading} style={{ marginTop: 'var(--space-2)' }}>
+          <Button
+            type="submit"
+            fullWidth
+            loading={loading}
+            disabled={loading}
+            style={{ marginTop: '8px' }}
+          >
             entrar
           </Button>
         </form>
-        <p style={{ textAlign: 'center', marginTop: 'var(--space-6)', fontSize: '14px', color: 'var(--text-2)' }}>
+
+        <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: 'var(--text-2)' }}>
           primeira vez aqui?{' '}
           <Link to="/cadastro" style={{ color: 'var(--accent)', fontWeight: '600' }}>
             criar conta
           </Link>
         </p>
+
       </div>
     </div>
   )
 }
 
-function Logo() {
-  return (
-    <div style={{ marginBottom: 'var(--space-10)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-      <div style={{
-        width: 40, height: 40, borderRadius: '50%',
-        background: 'linear-gradient(135deg, var(--orb-purple), var(--orb-pink))',
-        boxShadow: 'var(--shadow-orb)',
-        flexShrink: 0,
-      }} />
-      <span style={{ fontSize: '20px', fontWeight: '700', letterSpacing: '-0.02em', color: 'var(--text)' }}>
-        ARIA
-      </span>
-    </div>
-  )
-}
-
 const pageStyle = {
-  minHeight: '100dvh', display: 'flex',
-  alignItems: 'center', justifyContent: 'center',
-  padding: 'var(--space-6) var(--space-5)',
-  background: 'var(--bg)'
+  minHeight: '100dvh',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '24px 20px',
+  background: 'var(--bg)',
 }
 
 const cardStyle = {
-  width: '100%', maxWidth: '400px',
+  width: '100%',
+  maxWidth: '400px',
   background: 'var(--surface)',
   borderRadius: 'var(--radius-lg)',
   padding: '36px 32px',
   border: '1px solid var(--border)',
-  boxShadow: 'var(--shadow-md)'
+  boxShadow: 'var(--shadow-md)',
 }
