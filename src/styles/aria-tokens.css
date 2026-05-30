@@ -1,7 +1,6 @@
 /* ─────────────────────────────────────────────────────────────
-   ARIA — Design Tokens v2.0
-   Fonte única de todas as variáveis CSS do projeto.
-   Importado por: src/styles/global.css
+   ARIA — Design Tokens v3.0
+   Paleta: Azul + Verde. Sem rosa. Neutro de gênero.
    REGRAS INEGOCIÁVEIS:
    - --orb-* SOMENTE no gradiente do orb da ARIA
    - --aria-action em botões, bordas de foco, textos de ação
@@ -11,21 +10,21 @@
 
 :root {
   /* Ação — botões primários, bordas de foco, textos de ação */
-  --aria-action:        #6B5CE7;
-  --aria-action-hover:  #5A4BD6;
-  --aria-action-subtle: rgba(107,92,231,0.12);
+  --aria-action:        #18171C;
+  --aria-action-hover:  #2C2A35;
+  --aria-action-subtle: rgba(79,142,247,0.10);
   --aria-action-text:   #FFFFFF;
 
   /* Orb — EXCLUSIVO para o gradiente do orb da ARIA */
-  --orb-purple: #C8A6FF;
-  --orb-pink:   #FF9FCB;
-  --orb-blue:   #9FDFFF;
-  --orb-gold:   #FFD580;
+  --orb-purple: #4F8EF7;
+  --orb-pink:   #2DB87D;
+  --orb-blue:   #4F8EF7;
+  --orb-gold:   #2DB87D;
 
   /* Superfícies */
-  --bg:        #F7F6F3;
+  --bg:        #F5F4F1;
   --surface:   #FFFFFF;
-  --surface-2: #F0EFEC;
+  --surface-2: #EEECEA;
   --elevated:  #FFFFFF;
 
   /* Texto */
@@ -36,7 +35,7 @@
   /* Bordas */
   --border:        rgba(24,23,28,0.09);
   --border-strong: rgba(24,23,28,0.18);
-  --border-focus:  var(--aria-action);
+  --border-focus:  #4F8EF7;
 
   /* Semânticas */
   --success:    #2DB87D;
@@ -46,11 +45,17 @@
   --warning:    #F0A030;
   --warning-bg: rgba(240,160,48,0.10);
 
+  /* Destaque azul — tags, links, indicadores */
+  --accent:        #4F8EF7;
+  --accent-hover:  #378ADD;
+  --accent-subtle: rgba(79,142,247,0.10);
+  --accent-text:   #185FA5;
+
   /* Sombras */
   --shadow-sm:  0 1px 3px rgba(24,23,28,0.07), 0 1px 2px rgba(24,23,28,0.05);
   --shadow-md:  0 4px 12px rgba(24,23,28,0.09), 0 2px 4px rgba(24,23,28,0.06);
   --shadow-lg:  0 8px 32px rgba(24,23,28,0.12), 0 4px 8px rgba(24,23,28,0.08);
-  --shadow-orb: 0 0 60px rgba(200,166,255,0.35), 0 0 120px rgba(255,159,203,0.15);
+  --shadow-orb: 0 0 48px rgba(79,142,247,0.28), 0 0 96px rgba(45,184,125,0.14);
 
   /* Espaçamentos */
   --space-1:  4px;
@@ -81,13 +86,16 @@
 
 /* ── Tema escuro ─────────────────────────────────────────────── */
 [data-theme="dark"] {
-  --bg:            #0F0E14;
-  --surface:       #18161F;
-  --surface-2:     #201D29;
-  --elevated:      #231F2E;
+  --bg:            #1A1825;
+  --surface:       #221F30;
+  --surface-2:     #2A2638;
+  --elevated:      #2F2B40;
   --text:          #F0EEF8;
   --text-2:        #B8B4CC;
   --muted:         #7A7690;
   --border:        rgba(240,238,248,0.08);
   --border-strong: rgba(240,238,248,0.15);
+  --aria-action:        #F0EEF8;
+  --aria-action-hover:  #FFFFFF;
+  --accent-text:   #85B7EB;
 }
