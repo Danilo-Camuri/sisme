@@ -106,15 +106,17 @@ export function Button({ children, variant = 'primary', loading, fullWidth, ...p
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
-    padding: '14px 24px',
+    padding: '16px 24px',
     borderRadius: 'var(--radius-full)',
-    fontSize: '15px',
+    fontSize: '16px',
     fontWeight: '600',
     transition: 'opacity var(--transition-fast), transform var(--transition-fast)',
     width: fullWidth ? '100%' : undefined,
     cursor: props.disabled || loading ? 'not-allowed' : 'pointer',
     opacity: props.disabled || loading ? 0.5 : 1,
-    minHeight: '44px'
+    minHeight: '52px',
+    boxSizing: 'border-box',
+    WebkitAppearance: 'none',
   }
 
   const variants = {
