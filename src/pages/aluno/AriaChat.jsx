@@ -241,7 +241,7 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
           max_tokens: 300,
           messages: [{
             role: "user",
-            content: `Com base nessa conversa, gere um resumo estruturado em JSON com exatamente estes campos:\n- resumo_sessao: descrição dos temas abordados em 2 a 4 frases, sem citar falas literais\n- construto_cortex: letra do construto mais ativado — C, O, R, T, E ou X\n- nivel_crise: número de 0 a 3\n- ponto_retomada: uma frase curta em primeira pessoa da ARIA para retomar na próxima conversa, em minúsculas\n\nConstrutos CÓRTEX: C=Carga emocional, O=Organização/foco, R=Relações interpessoais, T=Tensão/ativação, E=Energia/vitalidade, X=Xeque existencial.\n\nConversa:\n${historicoTexto}\n\nResponda apenas com o JSON válido, sem explicação, sem blocos de código.`,
+content: `${getSummaryPrompt()}\n\nConversa:\n${historicoTexto}`,
           }],
         }),
       });
