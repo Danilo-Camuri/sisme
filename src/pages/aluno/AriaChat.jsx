@@ -9,6 +9,17 @@ import {
   montarBlocoMemoria,
 } from "./systemPrompts";
 
+// ─── Pós-processamento de texto da ARIA ──────────────────────
+function formatarResposta(texto) {
+  if (!texto) return texto;
+  return texto
+    .replace(/\.\s*\./g, '.')
+    .replace(/,\s*,/g, ',')
+    .replace(/\?\s*\?/g, '?')
+    .replace(/([.!?])\s+([a-záéíóúãõâêîôûàèìòùç])/g, (_, p, l) => p + ' ' + l.toUpperCase())
+    .replace(/^([a-záéíóúãõâêîôûàèìòùç])/, l => l.toUpperCase());
+}
+
 const MODEL      = "claude-haiku-4-5-20251001";
 const MAX_TOKENS = 600;
 const MAX_TROCAS = 15;
@@ -181,10 +192,10 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
           setCrisisLevel(cached.crisisLevel || 0);
         } else {
           const aberturas = getAberturaARIA(apelido, hora, comResumo);
-          setMessages([{ role: "assistant", content: aberturas[0] }]);
+          setMessages([{ role: "assistant", content: formatarResposta(aberturas[0]) }]);
           if (aberturas[1]) {
             setTimeout(() => {
-              setMessages(prev => [...prev, { role: "assistant", content: aberturas[1] }]);
+              setMessages(prev => [...prev, { role: "assistant", content: formatarResposta(aberturas[1]) }]);
             }, 1400);
           }
         }
@@ -361,7 +372,7 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
       const finalCrisis = Math.max(newCrisis, resCrisis);
       if (finalCrisis > newCrisis) { crisisRef.current = finalCrisis; setCrisisLevel(finalCrisis); }
 
-      const updated = [...newMessages, { role: "assistant", content: text }];
+      const updated = [...newMessages, { role: "assistant", content: formatarResposta(text) }];
       setMessages(updated);
 
       saveLocal(aluno.id, updated, newTrocas, finalCrisis);
@@ -420,10 +431,10 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
     const sp = getARIASystemPrompt(apelido, comResumo);
     setSystemPrompt(sp);
     const aberturas = getAberturaARIA(apelido, new Date().getHours(), comResumo);
-    setMessages([{ role: "assistant", content: aberturas[0] }]);
+    setMessages([{ role: "assistant", content: formatarResposta(aberturas[0]) }]);
     if (aberturas[1]) {
       setTimeout(() => {
-        setMessages(prev => [...prev, { role: "assistant", content: aberturas[1] }]);
+        setMessages(prev => [...prev, { role: "assistant", content: formatarResposta(aberturas[1]) }]);
       }, 1400);
     }
   }
