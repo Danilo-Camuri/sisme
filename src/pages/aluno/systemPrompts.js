@@ -120,14 +120,30 @@ export function getAberturaARIA(apelido, hora, historico = [], porta = null) {
 
 // ─── Prompt de geração de resumo ao encerrar sessão ──────────
 export function getSummaryPrompt() {
-  return `Você acabou de encerrar uma sessão de conversa com um adolescente do Ensino Médio como a ARIA.
+  return `Você acabou de encerrar uma sessão como a ARIA com um adolescente do Ensino Médio.
 
-Analise a conversa e responda APENAS com um JSON válido, sem texto antes ou depois, sem blocos markdown:
+Analise a conversa com atenção e responda APENAS com JSON válido, sem texto antes ou depois, sem blocos markdown.
+
+REGRAS DO RESUMO — LEIA COM ATENÇÃO:
+- Seja específico. Cite o tema real, a situação concreta, o sentimento nomeado pelo aluno.
+- Nunca descreva processo. Escreva conteúdo real.
+- Nunca use linguagem clínica. Escreva como quem conhece o aluno de verdade.
+- Se o aluno mencionou nome de pessoa, matéria, situação específica, inclua no resumo.
+- O resumo deve ser útil para retomar na próxima sessão sem reler o histórico.
+
+O QUE NÃO FAZER:
+"A conversa abordou questões sobre escolha profissional e o aluno expressou indecisão."
+"Exploramos temas relacionados à ansiedade e organização de rotina."
+
+O QUE FAZER:
+"Pedro está com raiva do pai porque ele cancelou a viagem planejada. Por baixo da raiva, apareceu medo de não ser prioridade. Não chegamos a uma conclusão."
+"Ana travou na prova de Química e chorou na escola. O problema não é o conteúdo. É o medo de decepcionar a mãe que paralisa."
+"Danilo está decidindo entre Medicina, Direito e Psicologia. Ele quer ajudar pessoas mas não quer depender só da sua presença. Ficamos sem resolver qual das três combina com isso."
 
 {
-  "resumo_sessao": "Texto de 2 a 4 frases descrevendo os temas abordados. Nunca cite falas literais do aluno.",
-  "construto_cortex": "Uma letra apenas — C, O, R, T, E ou X — o construto CÓRTEX mais ativado.",
-  "ponto_retomada": "Uma frase curta em primeira pessoa da ARIA, com maiúscula no início, para retomar na próxima sessão. Exemplo: Semana passada você estava travada em física antes do simulado, como foi?",
+  "resumo_sessao": "2 a 3 frases concretas: o que o aluno trouxe, o que sentiu, o que ficou sem resolver. Específico, direto, útil.",
+  "construto_cortex": "Uma letra — C, O, R, T, E ou X.",
+  "ponto_retomada": "Uma frase em primeira pessoa da ARIA, com maiúscula, mencionando algo específico para retomar. Exemplo: Você ia conversar com seu pai sobre a viagem cancelada. Como foi?",
   "nivel_crise": 0
 }
 
@@ -139,7 +155,7 @@ T = Tensão e ativação (insônia, agitação, irritabilidade, sintomas físico
 E = Energia e vitalidade (motivação, prazer, disposição, propósito)
 X = Xeque existencial (identidade, sentido, futuro, pertencimento)
 
-nivel_crise: 0, 1, 2 ou 3.
+nivel_crise: 0=sem crise, 1=atenção, 2=alerta, 3=risco imediato.
 Responda SOMENTE o JSON. Nenhum texto adicional.`;
 }
 
@@ -160,25 +176,41 @@ export function montarBlocoMemoria(nome, historico = []) {
   }
 
   const linhas = historico.map(h => {
-    const data      = fmtDataMemoria(h.criado_em);
-    // Tratar JSON bruto legado e textos genéricos
+    const data = fmtDataMemoria(h.criado_em);
     let resumoRaw = h.resumo_sessao || "";
     if (resumoRaw.startsWith("{")) {
-      try {
-        const p = JSON.parse(resumoRaw);
-        resumoRaw = p.resumo_sessao || p.resumo_narrativo || "";
-      } catch { resumoRaw = ""; }
+      try { const p = JSON.parse(resumoRaw); resumoRaw = p.resumo_sessao || p.resumo_narrativo || ""; }
+      catch { resumoRaw = ""; }
     }
     const genericos = ["sessão encerrada", "sessão muito curta", "sessão encerrada sem resumo"];
     const tema = (!resumoRaw || genericos.some(g => resumoRaw.toLowerCase().startsWith(g)))
       ? "sessão sem resumo detalhado"
-      : resumoRaw.split(".")[0]?.trim() || "sessão sem resumo";
+      : resumoRaw.trim();
     const construto = h.construto_cortex || "—";
     const retomada  = h.ponto_retomada   || "—";
-    return `Sessão (${data}): ${tema} / ${construto} / ${retomada}`;
+    return `Sessão (${data}): ${tema} | construto: ${construto} | retomada: ${retomada}`;
   });
 
-  return `[memória de ${nome}]\n${linhas.join("\n")}`;
+  // Perfil longitudinal automático — gerado a partir de 3 sessões
+  let perfilLongitudinal = "";
+  if (historico.length >= 3) {
+    const construtos = historico.map(h => h.construto_cortex).filter(Boolean);
+    const freq = {};
+    construtos.forEach(c => { freq[c] = (freq[c] || 0) + 1; });
+    const maisFrequente = Object.entries(freq).sort((a,b) => b[1]-a[1])[0]?.[0];
+    const mapaConstruto = {
+      C: "carga emocional (ansiedade, tristeza, sobrecarga)",
+      O: "organização e foco (estudos, rotina)",
+      R: "relações interpessoais (família, amigos, vínculos)",
+      T: "tensão e ativação (insônia, irritabilidade)",
+      E: "energia e vitalidade (motivação, propósito)",
+      X: "xeque existencial (identidade, futuro, sentido)",
+    };
+    const temaRecorrente = maisFrequente ? mapaConstruto[maisFrequente] : "variado";
+    perfilLongitudinal = `\n[perfil de ${nome} — ${historico.length} sessões]\nTema mais frequente: ${temaRecorrente}.\nUse esse perfil para personalizar o tom e as perguntas.`;
+  }
+
+  return `[memória de ${nome}]\n${linhas.join("\n")}${perfilLongitudinal}`;
 }
 
 export function getARIASystemPrompt(apelido, historico = []) {
