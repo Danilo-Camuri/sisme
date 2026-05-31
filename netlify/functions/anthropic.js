@@ -20,12 +20,7 @@
 //   - Não tem lógica de negócio
 
 exports.handler = async function (event) {
-  // Só aceita POST
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' }
-  }
-
-  // Preflight CORS
+  // Preflight CORS — deve vir ANTES do check de método
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -36,6 +31,11 @@ exports.handler = async function (event) {
       },
       body: '',
     }
+  }
+
+  // Só aceita POST
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: 'Method Not Allowed' }
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
