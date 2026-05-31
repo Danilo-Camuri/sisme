@@ -298,7 +298,7 @@ content: `${getSummaryPrompt()}\n\nConversa:\n${historicoTexto}`,
       if (nivelFinal >= 2) {
         await supabase.from("alertas").insert({
           aluno_id: aluno.id, escola_id: aluno.escola_id,
-          nivel_alerta: nivelFinal, criado_em: new Date().toISOString(),
+          nivel: nivelFinal, criado_em: new Date().toISOString(),
         });
       }
 
@@ -550,9 +550,9 @@ content: `${getSummaryPrompt()}\n\nConversa:\n${historicoTexto}`,
                 <p style={s.sessionTitle}>
                   {tituloSessao(sess.resumo_sessao || sess.resumo_temas)}
                 </p>
-                {sess.ponto_retomada && (
-                  <p style={s.sessionRetomada}>↩ {sess.ponto_retomada}</p>
-                )}
+                <p style={{ fontSize: 11, color: "var(--accent)", margin: "4px 0 0", fontWeight: 500 }}>
+                  ver resumo →
+                </p>
               </div>
             ))
           )}
