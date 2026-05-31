@@ -160,20 +160,15 @@ export function NovaSenha() {
 
 function Logo() {
   return (
-    <div style={{ marginBottom: '36px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <div style={{ marginBottom: '36px', display: 'flex', alignItems: 'center', gap: '12px' }}>
       <div style={{
-        width: '36px', height: '36px',
-        background: 'var(--aria-action)',
-        borderRadius: '10px',
-        display: 'flex', alignItems: 'center', justifyContent: 'center'
-      }}>
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <path d="M10 2C10 2 4 5 4 10.5C4 14 6.5 17 10 17C13.5 17 16 14 16 10.5C16 5 10 2 10 2Z" fill="white" fillOpacity="0.9"/>
-          <circle cx="10" cy="10.5" r="2.5" fill="var(--accent)"/>
-        </svg>
-      </div>
-      <span style={{ fontSize: '20px', fontWeight: '600', letterSpacing: '-0.02em', color: 'var(--text)' }}>
-        SISME
+        width: 40, height: 40, borderRadius: '50%',
+        background: 'linear-gradient(135deg, #4F8EF7, #2DB87D)',
+        boxShadow: '0 0 24px rgba(79,142,247,0.35)',
+        flexShrink: 0,
+      }} />
+      <span style={{ fontSize: '20px', fontWeight: '700', letterSpacing: '-0.02em', color: 'var(--text)' }}>
+        ARIA
       </span>
     </div>
   )
