@@ -40,8 +40,9 @@ export default function Onboarding() {
   const [alunoId,    setAlunoId]    = useState(null)
   const [email,       setEmail]       = useState('')
   const [senha,       setSenha]       = useState('')
-  const [erroConta,   setErroConta]   = useState('')
-  const [criandoConta,setCriandoConta]= useState(false)
+  const [erroConta,      setErroConta]      = useState('')
+  const [criandoConta,   setCriandoConta]   = useState(false)
+  const [aguardandoEmail, setAguardandoEmail] = useState(false)
   const [turno,             setTurno]             = useState(null)
   const [horariosSelected,  setHorariosSelected]  = useState([])
   const [diasSelected,      setDiasSelected]      = useState([])
@@ -65,6 +66,7 @@ export default function Onboarding() {
     const result = await cadastrar({ email, senha, nome: nome.trim() || 'Aluno', escolaId, alunoId })
     setCriandoConta(false)
     if (result.error) { setErroConta(result.error) }
+    else if (result.confirmacaoEmail) { setAguardandoEmail(true) }
     else { setTela(5) }
   }
 
@@ -219,6 +221,25 @@ export default function Onboarding() {
           <Btn onClick={criarConta} disabled={!validado || criandoConta}>
             {criandoConta ? 'criando conta...' : 'criar minha conta'}
           </Btn>
+        </div>
+      )}
+
+      {/* Tela aguardando confirmação de e-mail */}
+      {aguardandoEmail && (
+        <div style={{ ...s.tela, gap: 32, textAlign: 'center', padding: '48px 32px' }}>
+          <ARIAOrbGrande />
+          <div style={s.textBlock}>
+            <h1 style={{ ...s.h1, fontSize: 24 }}>confirma seu e-mail.</h1>
+            <p style={{ ...s.sub, marginTop: 12, lineHeight: 1.7 }}>
+              enviamos um link para <strong style={{ color: 'var(--text)' }}>{email}</strong>.
+            </p>
+            <p style={{ ...s.sub, marginTop: 8, lineHeight: 1.7 }}>
+              abre seu e-mail, clica no link e volta aqui. a gente continua de onde parou.
+            </p>
+          </div>
+          <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 8 }}>
+            não recebeu? verifique a caixa de spam ou tente com outro e-mail.
+          </p>
         </div>
       )}
 
