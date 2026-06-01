@@ -30,6 +30,11 @@ export function AuthProvider({ children }) {
       .select('*, escolas(nome, codigo)')
       .eq('usuario_id', userId)
       .single()
+    // Garante nome nunca null — usa email como fallback
+    if (data && !data.nome) {
+      const { data: u } = await supabase.auth.getUser()
+      data.nome = u?.user?.user_metadata?.nome || u?.user?.email?.split('@')[0] || 'Aluno'
+    }
     setAluno(data)
     setLoading(false)
   }
