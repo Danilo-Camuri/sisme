@@ -158,13 +158,14 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
       try {
         const cached = loadLocal(aluno.id);
 
-        const { data: todas } = await supabase
+        const { data: todas, error: erroConversas } = await supabase
           .from("conversas")
-          .select("id, resumo_temas, resumo_sessao, construto_cortex, ponto_retomada, criado_em")
+          .select("id, resumo_sessao, construto_cortex, ponto_retomada, criado_em")
           .eq("aluno_id", aluno.id)
           .order("criado_em", { ascending: false })
           .limit(50);
 
+        if (erroConversas) console.warn("[ARIA] conversas:", erroConversas.message);
         setAllSessions(todas || []);
 
         const comResumo = (todas || []).filter(c => c.resumo_sessao).slice(0, MAX_HIST);
@@ -177,13 +178,15 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
         setSystemPrompt(sp);
 
         const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-        const { data: ci } = await supabase
-          .from("checkins")
-          .select("humor, energia")
-          .eq("aluno_id", aluno.id)
-          .gte("criado_em", hoje.toISOString())
-          .maybeSingle();
-        if (ci) { setHumorValue(ci.humor); setEnergiaValue(ci.energia); setHumorSalvo(true); }
+        try {
+          const { data: ci } = await supabase
+            .from("checkins")
+            .select("humor, energia")
+            .eq("aluno_id", aluno.id)
+            .gte("criado_em", hoje.toISOString())
+            .maybeSingle();
+          if (ci) { setHumorValue(ci.humor); setEnergiaValue(ci.energia); setHumorSalvo(true); }
+        } catch { /* checkins indisponível — não bloqueia o chat */ }
 
         if (cached && cached.msgs && cached.msgs.length > 0) {
           setMessages(cached.msgs);
