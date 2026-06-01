@@ -71,9 +71,13 @@ export function AuthProvider({ children }) {
       return { error: 'Erro ao criar conta. Tente novamente.' }
     }
 
+    // user.id disponível mesmo com confirmação de e-mail pendente
+    const userId = authData.user?.id
+    if (!userId) return { error: 'Erro ao criar conta. Tente novamente.' }
+
     const { error: updateError } = await supabase
       .from('alunos')
-      .update({ usuario_id: authData.user.id, nome: nome.trim() })
+      .update({ usuario_id: userId, nome: nome.trim() })
       .eq('id', alunoId)
 
     if (updateError) return { error: 'Erro ao vincular conta. Tente novamente.' }
