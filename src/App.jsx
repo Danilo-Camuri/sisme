@@ -1,3 +1,6 @@
+// App.jsx — com rota "/" apontando para LandingPage
+// Única mudança: import + rota "/" antes do redirect
+
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { useAutoTheme } from './hooks/useAutoTheme'
@@ -6,6 +9,7 @@ import Login from './components/auth/Login'
 import { RecuperarSenha, NovaSenha } from './components/auth/Senha'
 import Onboarding from './pages/onboarding/Onboarding'
 import HomeAluno from './pages/aluno/HomeAluno'
+import LandingPage from './pages/LandingPage'   // ← NOVO
 
 function AlunoRoute({ children }) {
   const { aluno, loading } = useAuth()
@@ -20,6 +24,7 @@ function AppWithTheme() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/"                element={<LandingPage />} />          {/* ← NOVO */}
         <Route path="/login"           element={<Login />} />
         <Route path="/cadastro"        element={<Onboarding />} />
         <Route path="/recuperar-senha" element={<RecuperarSenha />} />
@@ -32,8 +37,7 @@ function AppWithTheme() {
           path="/home"
           element={<ProtectedRoute><AlunoRoute><HomeAluno /></AlunoRoute></ProtectedRoute>}
         />
-        <Route path="/"  element={<Navigate to="/home"  replace />} />
-        <Route path="*"  element={<Navigate to="/home"  replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   )
