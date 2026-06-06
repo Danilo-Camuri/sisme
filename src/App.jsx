@@ -10,10 +10,10 @@ import { RecuperarSenha, NovaSenha } from './components/auth/Senha'
 import Onboarding from './pages/onboarding/Onboarding'
 import HomeAluno from './pages/aluno/HomeAluno'
 import LandingPage from './pages/LandingPage'
-import PoliticaPrivacidade from './pages/legal/PoliticaPrivacidade'
-import TermosDeUso from './pages/legal/TermosDeUso'
-import PoliticaCrises from './pages/legal/PoliticaCrises'
-import ConformidadeLGPD from './pages/legal/ConformidadeLGPD'
+import PoliticaPrivacidade from './legal/PoliticaPrivacidade'
+import TermosDeUso from './legal/TermosDeUso'
+import PoliticaCrises from './legal/PoliticaCrises'
+import ConformidadeLGPD from './legal/ConformidadeLGPD'
 
 function AlunoRoute({ children }) {
   const { aluno, loading } = useAuth()
