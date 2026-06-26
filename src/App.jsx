@@ -1,6 +1,4 @@
-// App.jsx — v3
-// Adiciona rotas legais: /privacidade, /termos, /protecao-a-vida, /lgpd
-
+// App.jsx — rotas completas ARIA
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { useAutoTheme } from './hooks/useAutoTheme'
@@ -10,10 +8,7 @@ import { RecuperarSenha, NovaSenha } from './components/auth/Senha'
 import Onboarding from './pages/onboarding/Onboarding'
 import HomeAluno from './pages/aluno/HomeAluno'
 import LandingPage from './pages/LandingPage'
-import PoliticaPrivacidade from './legal/PoliticaPrivacidade'
-import TermosDeUso from './legal/TermosDeUso'
-import PoliticaCrises from './legal/PoliticaCrises'
-import ConformidadeLGPD from './legal/ConformidadeLGPD'
+import TCLEPage from './pages/tcle/TCLEPage'
 
 function AlunoRoute({ children }) {
   const { aluno, loading } = useAuth()
@@ -34,19 +29,20 @@ function AppWithTheme() {
         <Route path="/cadastro"            element={<Onboarding />} />
         <Route path="/recuperar-senha"     element={<RecuperarSenha />} />
         <Route path="/nova-senha"          element={<NovaSenha />} />
+        <Route path="/tcle/:codigoEscola"  element={<TCLEPage />} />
 
-        {/* Páginas legais — públicas */}
-        <Route path="/privacidade"         element={<PoliticaPrivacidade />} />
-        <Route path="/termos"              element={<TermosDeUso />} />
-        <Route path="/protecao-a-vida"     element={<PoliticaCrises />} />
-        <Route path="/lgpd"                element={<ConformidadeLGPD />} />   {/* sem link público na nav */}
-
-        {/* Protegidas */}
-        <Route path="/onboarding"          element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-        <Route path="/home"                element={<ProtectedRoute><AlunoRoute><HomeAluno /></AlunoRoute></ProtectedRoute>} />
+        {/* Protegida */}
+        <Route
+          path="/onboarding"
+          element={<ProtectedRoute><Onboarding /></ProtectedRoute>}
+        />
+        <Route
+          path="/home"
+          element={<ProtectedRoute><AlunoRoute><HomeAluno /></AlunoRoute></ProtectedRoute>}
+        />
 
         {/* Fallback */}
-        <Route path="*"                    element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   )
