@@ -22,7 +22,7 @@ export default function Login() {
     const result = await login(form)
     setLoading(false)
     if (result.error) { setError(result.error); return }
-    navigate('/')
+    navigate('/home')
   }
 
   return (
