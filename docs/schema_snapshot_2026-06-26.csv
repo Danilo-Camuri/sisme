@@ -1,0 +1,101 @@
+table_name,column_name,data_type,is_nullable,column_default
+alertas,id,uuid,NO,gen_random_uuid()
+alertas,aluno_id,uuid,NO,null
+alertas,escola_id,uuid,NO,null
+alertas,conversa_id,uuid,YES,null
+alertas,nivel,integer,NO,null
+alertas,descricao,text,YES,null
+alertas,resolvido,boolean,YES,false
+alertas,resolvido_em,timestamp with time zone,YES,null
+alertas,criado_em,timestamp with time zone,YES,now()
+alunos,id,uuid,NO,gen_random_uuid()
+alunos,escola_id,uuid,NO,null
+alunos,matricula,text,NO,null
+alunos,nome,text,YES,null
+alunos,usuario_id,uuid,YES,null
+alunos,onboarding_ok,boolean,YES,false
+alunos,criado_em,timestamp with time zone,YES,now()
+alunos,apelido,text,YES,null
+alunos,turno,text,YES,null
+alunos,horarios_preferidos,jsonb,YES,null
+alunos,dias_pesados,jsonb,YES,null
+alunos,tcle_assinado,boolean,YES,false
+alunos,data_nascimento,date,YES,null
+anotacoes_psicologa,id,uuid,NO,gen_random_uuid()
+anotacoes_psicologa,psicologa_id,uuid,NO,null
+anotacoes_psicologa,aluno_id,uuid,NO,null
+anotacoes_psicologa,escola_id,uuid,NO,null
+anotacoes_psicologa,conteudo,text,NO,null
+anotacoes_psicologa,criado_em,timestamp with time zone,YES,now()
+anotacoes_psicologa,atualizado_em,timestamp with time zone,YES,now()
+checkins,id,uuid,NO,gen_random_uuid()
+checkins,aluno_id,uuid,NO,null
+checkins,escola_id,uuid,NO,null
+checkins,humor,integer,NO,null
+checkins,energia,integer,YES,null
+checkins,nota,text,YES,null
+checkins,criado_em,timestamp with time zone,YES,now()
+contribuicoes_pais,id,uuid,NO,gen_random_uuid()
+contribuicoes_pais,aluno_id,uuid,NO,null
+contribuicoes_pais,escola_id,uuid,NO,null
+contribuicoes_pais,resp1,integer,YES,null
+contribuicoes_pais,resp2,integer,YES,null
+contribuicoes_pais,resp3,integer,YES,null
+contribuicoes_pais,resp4,integer,YES,null
+contribuicoes_pais,observacao,text,YES,null
+contribuicoes_pais,criado_em,timestamp with time zone,YES,now()
+conversas,id,uuid,NO,gen_random_uuid()
+conversas,aluno_id,uuid,NO,null
+conversas,escola_id,uuid,NO,null
+conversas,assistente,text,NO,null
+conversas,resumo_temas,text,YES,null
+conversas,nivel_alerta,integer,YES,0
+conversas,encerrada,boolean,YES,false
+conversas,criado_em,timestamp with time zone,YES,now()
+conversas,encerrada_em,timestamp with time zone,YES,null
+conversas,nivel_crise_maximo,integer,YES,0
+conversas,trocas_realizadas,integer,YES,0
+conversas,usuario_id,uuid,YES,null
+conversas,construto_cortex,text,YES,null
+conversas,ponto_retomada,text,YES,null
+conversas,resumo_sessao,text,YES,null
+conversas,porta_entrada,text,YES,null
+escolas,id,uuid,NO,gen_random_uuid()
+escolas,nome,text,NO,null
+escolas,codigo,text,NO,null
+escolas,ativo,boolean,YES,true
+escolas,criado_em,timestamp with time zone,YES,now()
+registro_pessoal,id,uuid,NO,gen_random_uuid()
+registro_pessoal,aluno_id,uuid,NO,null
+registro_pessoal,escola_id,uuid,NO,null
+registro_pessoal,conteudo,text,NO,null
+registro_pessoal,criado_em,timestamp with time zone,YES,now()
+tcle_registros,id,uuid,NO,gen_random_uuid()
+tcle_registros,created_at,timestamp with time zone,YES,now()
+tcle_registros,escola_codigo,text,NO,null
+tcle_registros,escola_id,uuid,YES,null
+tcle_registros,aluno_matricula,text,NO,null
+tcle_registros,aluno_id,uuid,YES,null
+tcle_registros,responsavel_nome,text,NO,null
+tcle_registros,responsavel_cpf,text,NO,null
+tcle_registros,ip_address,text,NO,null
+tcle_registros,user_agent,text,YES,null
+tcle_registros,timestamp_aceite,timestamp with time zone,YES,now()
+tcle_registros,versao_documento,text,YES,'TCLE-ARIA-v1.0-junho2026'::text
+tcle_registros,hash_documento,text,NO,null
+tcle_registros,bloco_a_aceito,boolean,YES,false
+tcle_registros,bloco_b_aceito,boolean,YES,false
+tcle_registros,bloco_c_aceito,boolean,YES,false
+tcle_registros,tcle_assinado,boolean,YES,false
+tcle_registros,revogado,boolean,YES,false
+tcle_registros,timestamp_revogacao,timestamp with time zone,YES,null
+trilhas,id,uuid,NO,gen_random_uuid()
+trilhas,escola_id,uuid,YES,null
+trilhas,titulo,text,NO,null
+trilhas,descricao,text,YES,null
+trilhas,audio_url,text,NO,null
+trilhas,texto_ancora,text,YES,null
+trilhas,duracao_seg,integer,YES,null
+trilhas,ordem,integer,YES,0
+trilhas,ativo,boolean,YES,true
+trilhas,criado_em,timestamp with time zone,YES,now()
