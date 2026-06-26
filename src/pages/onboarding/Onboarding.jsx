@@ -76,15 +76,19 @@ export default function Onboarding() {
   async function concluir() {
     setSalvando(true)
     if (!aluno) { setSalvando(false); return }
-    await supabase.from('alunos').update({
+    const { error } = await supabase.from('alunos').update({
       nome:                nome.trim() || aluno.nome,
       apelido:             apelido.trim() || nome.trim() || aluno.nome?.split(' ')[0],
       turno:               turno || null,
       horarios_preferidos: horariosSelected.length ? horariosSelected : null,
       dias_pesados:        diasSelected.length ? diasSelected : null,
       onboarding_ok:       true,
-    }).eq('id', aluno.id)
+    }).eq('id', aluno.id).select().single()
     setSalvando(false)
+    if (error) {
+      alert('Não consegui salvar seu perfil. Tenta de novo?')
+      return
+    }
     navigate('/home', { replace: true })
   }
 
