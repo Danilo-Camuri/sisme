@@ -85,7 +85,7 @@ export default function Onboarding() {
       onboarding_ok:       true,
     }).eq('id', aluno.id)
     setSalvando(false)
-    navigate('/', { replace: true })
+    navigate('/home', { replace: true })
   }
 
   return (
