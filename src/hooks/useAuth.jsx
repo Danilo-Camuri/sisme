@@ -25,18 +25,35 @@ export function AuthProvider({ children }) {
   }, [])
 
   async function fetchAluno(userId) {
-    const { data } = await supabase
-      .from('alunos')
-      .select('*, escolas(nome, codigo)')
-      .eq('usuario_id', userId)
-      .single()
-    // Garante nome nunca null — usa email como fallback
-    if (data && !data.nome) {
-      const { data: u } = await supabase.auth.getUser()
-      data.nome = u?.user?.user_metadata?.nome || u?.user?.email?.split('@')[0] || 'Aluno'
+    try {
+      const { data, error } = await supabase
+        .from('alunos')
+        .select('*, escolas(nome, codigo)')
+        .eq('usuario_id', userId)
+        .maybeSingle()
+
+      if (error) {
+        console.error('[useAuth] fetchAluno erro:', error.message)
+        setAluno(null)
+        return
+      }
+
+      // Garante nome nunca null — usa email como fallback
+      if (data && !data.nome) {
+        try {
+          const { data: u } = await supabase.auth.getUser()
+          data.nome = u?.user?.user_metadata?.nome || u?.user?.email?.split('@')[0] || 'Aluno'
+        } catch {
+          data.nome = 'Aluno'
+        }
+      }
+      setAluno(data)
+    } catch (err) {
+      console.error('[useAuth] fetchAluno exceção:', err)
+      setAluno(null)
+    } finally {
+      setLoading(false)
     }
-    setAluno(data)
-    setLoading(false)
   }
 
   async function validarEscolaMatricula({ codigoEscola, matricula }) {
