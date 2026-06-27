@@ -69,9 +69,9 @@ function construtoLabel(letra) {
 
 function getStorageKey(alunoId) { return `aria_msgs_${alunoId}`; }
 
-function saveLocal(alunoId, msgs, trocas, crisisLevel) {
+function saveLocal(alunoId, msgs, trocas, crisisLevel, conversaId) {
   try {
-    sessionStorage.setItem(getStorageKey(alunoId), JSON.stringify({ msgs, trocas, crisisLevel, ts: Date.now() }));
+    sessionStorage.setItem(getStorageKey(alunoId), JSON.stringify({ msgs, trocas, crisisLevel, conversaId, ts: Date.now() }));
   } catch {}
 }
 
@@ -121,6 +121,7 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
   const textareaRef = useRef(null);
   const crisisRef   = useRef(0);
   const touchStartX = useRef(null);
+  const conversaIdRef = useRef(null);
 
   const hora    = new Date().getHours();
   const apelido = aluno?.apelido || aluno?.nome?.split(" ")[0] || "você";
@@ -151,6 +152,34 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
       document.removeEventListener("touchend",   onTouchEnd);
     };
   }, []);
+
+  // ── Criar conversa no banco e guardar o id ──
+  async function criarConversa() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: conv, error: convErr } = await supabase
+        .from("conversas")
+        .insert({
+          aluno_id:      aluno.id,
+          escola_id:     aluno.escola_id,
+          usuario_id:    user.id,
+          assistente:    "aria",
+          porta_entrada: portaEntrada || null,
+          encerrada:     false,
+          criado_em:     new Date().toISOString(),
+        })
+        .select("id")
+        .single();
+      if (convErr) {
+        console.error("[ARIA] criar conversa:", convErr.message);
+        return null;
+      }
+      return conv.id;
+    } catch (e) {
+      console.error("[ARIA] erro ao criar conversa:", e);
+      return null;
+    }
+  }
 
   useEffect(() => {
     if (!aluno) return;
@@ -189,11 +218,35 @@ export default function AriaChat({ portaEntrada = null, onNovaConversa = null })
         } catch { /* checkins indisponível — não bloqueia o chat */ }
 
         if (cached && cached.msgs && cached.msgs.length > 0) {
+          // Sessão em andamento restaurada do cache
           setMessages(cached.msgs);
           setTrocas(cached.trocas || 0);
           crisisRef.current = cached.crisisLevel || 0;
           setCrisisLevel(cached.crisisLevel || 0);
+
+          // Recuperar conversa_id: do cache ou buscar a mais recente aberta
+          if (cached.conversaId) {
+            conversaIdRef.current = cached.conversaId;
+          } else {
+            // Cache antigo sem conversaId — buscar conversa aberta
+            const { data: openConv } = await supabase
+              .from("conversas")
+              .select("id")
+              .eq("aluno_id", aluno.id)
+              .eq("encerrada", false)
+              .order("criado_em", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            if (openConv) {
+              conversaIdRef.current = openConv.id;
+            } else {
+              conversaIdRef.current = await criarConversa();
+            }
+          }
         } else {
+          // Sessão nova — criar conversa no banco ANTES do primeiro turno
+          conversaIdRef.current = await criarConversa();
+
           const aberturas = getAberturaARIA(apelido, hora, comResumo);
           setMessages([{ role: "assistant", content: formatarResposta(aberturas[0]) }]);
           if (aberturas[1]) {
@@ -281,28 +334,58 @@ content: `${getSummaryPrompt()}\n\nConversa:\n${historicoTexto}`,
 
       setResumoFinal(resumo);
 
-      const { data: { user } } = await supabase.auth.getUser();
-      await supabase.from("conversas").insert({
-        aluno_id:           aluno.id,
-        escola_id:          aluno.escola_id,
-        usuario_id:         user.id,
-        assistente:         "aria",
-        porta_entrada:      portaEntrada || null,
-        resumo_temas:       resumo.resumo_sessao,
-        resumo_sessao:      resumo.resumo_sessao,
-        construto_cortex:   resumo.construto_cortex  || null,
-        ponto_retomada:     resumo.ponto_retomada    || null,
-        nivel_crise_maximo: nivelFinal,
-        nivel_alerta:       nivelFinal,
-        trocas_realizadas:  finalMessages.filter(m => m.role === "user").length,
-        criado_em:          new Date().toISOString(),
-      });
+      // ── UPDATE da conversa criada no início da sessão (não mais INSERT) ──
+      if (conversaIdRef.current) {
+        const { error: updateErr } = await supabase
+          .from("conversas")
+          .update({
+            porta_entrada:      portaEntrada || null,
+            resumo_temas:       resumo.resumo_sessao,
+            resumo_sessao:      resumo.resumo_sessao,
+            construto_cortex:   resumo.construto_cortex  || null,
+            ponto_retomada:     resumo.ponto_retomada    || null,
+            nivel_crise_maximo: nivelFinal,
+            nivel_alerta:       nivelFinal,
+            trocas_realizadas:  finalMessages.filter(m => m.role === "user").length,
+            encerrada:          true,
+            encerrada_em:       new Date().toISOString(),
+          })
+          .eq("id", conversaIdRef.current);
+        if (updateErr) console.error("[ARIA] update conversa:", updateErr.message);
+      } else {
+        // Fallback: se por alguma razão não temos conversaId, inserir
+        console.warn("[ARIA] saveSession sem conversaId — usando insert como fallback");
+        const { data: { user } } = await supabase.auth.getUser();
+        await supabase.from("conversas").insert({
+          aluno_id:           aluno.id,
+          escola_id:          aluno.escola_id,
+          usuario_id:         user.id,
+          assistente:         "aria",
+          porta_entrada:      portaEntrada || null,
+          resumo_temas:       resumo.resumo_sessao,
+          resumo_sessao:      resumo.resumo_sessao,
+          construto_cortex:   resumo.construto_cortex  || null,
+          ponto_retomada:     resumo.ponto_retomada    || null,
+          nivel_crise_maximo: nivelFinal,
+          nivel_alerta:       nivelFinal,
+          trocas_realizadas:  finalMessages.filter(m => m.role === "user").length,
+          encerrada:          true,
+          encerrada_em:       new Date().toISOString(),
+          criado_em:          new Date().toISOString(),
+        });
+      }
 
       if (nivelFinal >= 2) {
-        await supabase.from("alertas").insert({
-          aluno_id: aluno.id, escola_id: aluno.escola_id,
-          nivel: nivelFinal, criado_em: new Date().toISOString(),
+        const { error: alertaErr } = await supabase.from("alertas").insert({
+          aluno_id:    aluno.id,
+          escola_id:   aluno.escola_id,
+          conversa_id: conversaIdRef.current || null,
+          nivel:       nivelFinal,
+          categoria:   'sofrimento',
+          status:      'aberto',
+          criado_em:   new Date().toISOString(),
         });
+        if (alertaErr) console.error("[ARIA] alerta:", alertaErr.message);
       }
 
       clearLocal(aluno.id);
@@ -343,7 +426,7 @@ content: `${getSummaryPrompt()}\n\nConversa:\n${historicoTexto}`,
     const newTrocas = trocas + 1;
     setTrocas(newTrocas);
 
-    saveLocal(aluno.id, newMessages, newTrocas, newCrisis);
+    saveLocal(aluno.id, newMessages, newTrocas, newCrisis, conversaIdRef.current);
 
     try {
       const apiMessages = newMessages
@@ -378,7 +461,7 @@ content: `${getSummaryPrompt()}\n\nConversa:\n${historicoTexto}`,
       const updated = [...newMessages, { role: "assistant", content: formatarResposta(text) }];
       setMessages(updated);
 
-      saveLocal(aluno.id, updated, newTrocas, finalCrisis);
+      saveLocal(aluno.id, updated, newTrocas, finalCrisis, conversaIdRef.current);
 
       if (newTrocas >= MAX_TROCAS || finalCrisis === 3) {
         setSessionEnded(true);
@@ -420,6 +503,7 @@ content: `${getSummaryPrompt()}\n\nConversa:\n${historicoTexto}`,
     setSessionEnded(false);
     setCrisisLevel(0);
     crisisRef.current = 0;
+    conversaIdRef.current = null;
 
     const { data: todas } = await supabase
       .from("conversas")
@@ -433,6 +517,10 @@ content: `${getSummaryPrompt()}\n\nConversa:\n${historicoTexto}`,
     console.log("[ARIA memória nova conversa]\n" + montarBlocoMemoria(apelido, comResumo));
     const sp = getARIASystemPrompt(apelido, comResumo);
     setSystemPrompt(sp);
+
+    // Criar nova conversa no banco
+    conversaIdRef.current = await criarConversa();
+
     const aberturas = getAberturaARIA(apelido, new Date().getHours(), comResumo);
     setMessages([{ role: "assistant", content: formatarResposta(aberturas[0]) }]);
     if (aberturas[1]) {
