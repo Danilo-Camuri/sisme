@@ -35,7 +35,6 @@ const { createClient } = require('@supabase/supabase-js');
 const ANTHROPIC_API_KEY        = process.env.ANTHROPIC_API_KEY;
 const SUPABASE_URL             = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const SUPABASE_JWT_SECRET      = process.env.SUPABASE_JWT_SECRET;
 
 const CLASSIFIER_MODEL   = 'claude-haiku-4-5-20251001';
 const CLASSIFIER_VERSION = 'aria-risk-2026-06-classifier-v1';
@@ -94,51 +93,27 @@ function categorizar(nivel, termo) {
   return 'sem_risco';
 }
 
-// ─── Validação de JWT Supabase (HS256) com crypto nativo ─────────────────────
-function base64UrlDecode(str) {
-  str = str.replace(/-/g, '+').replace(/_/g, '/');
-  while (str.length % 4) str += '=';
-  return Buffer.from(str, 'base64');
-}
-
-function validarJWT(authHeader) {
+// ─── Validação de JWT Supabase via API oficial (getUser) ─────────────────────
+// O projeto usa chaves ASSIMÉTRICAS (ES256), então não há segredo compartilhado
+// para verificar HMAC localmente. Validamos pelo método oficial: enviamos o
+// token ao Supabase, que verifica a assinatura e devolve o usuário. Robusto a
+// rotação de chave e a qualquer algoritmo de assinatura.
+async function validarJWT(authHeader, supabaseClient) {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return { error: 'Token ausente.' };
   }
   const token = authHeader.slice(7).trim();
-  const parts = token.split('.');
-  if (parts.length !== 3) return { error: 'Token malformado.' };
+  if (!token || token.split('.').length !== 3) {
+    return { error: 'Token malformado.' };
+  }
 
-  const [headerB64, payloadB64, signatureB64] = parts;
-
-  // Recalcular a assinatura HS256 e comparar em tempo constante
-  const data = `${headerB64}.${payloadB64}`;
-  const expected = crypto
-    .createHmac('sha256', SUPABASE_JWT_SECRET)
-    .update(data)
-    .digest();
-  const received = base64UrlDecode(signatureB64);
-
-  if (expected.length !== received.length ||
-      !crypto.timingSafeEqual(expected, received)) {
+  const { data, error } = await supabaseClient.auth.getUser(token);
+  if (error || !data?.user?.id) {
     return { error: 'Assinatura inválida.' };
   }
 
-  let payload;
-  try {
-    payload = JSON.parse(base64UrlDecode(payloadB64).toString('utf8'));
-  } catch {
-    return { error: 'Payload inválido.' };
-  }
-
-  // Expiração
-  if (payload.exp && Date.now() / 1000 > payload.exp) {
-    return { error: 'Token expirado.' };
-  }
-  // O subject é o auth.uid() — a identidade real do usuário
-  if (!payload.sub) return { error: 'Token sem subject.' };
-
-  return { userId: payload.sub };
+  // data.user.id é o auth.uid() — a identidade real, verificada pelo servidor
+  return { userId: data.user.id };
 }
 
 // ─── Classificador via Anthropic (camada 2) ──────────────────────────────────
@@ -219,7 +194,7 @@ exports.handler = async function (event) {
   }
 
   // Checagem de configuração — falha fechada, nunca aberta
-  if (!ANTHROPIC_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !SUPABASE_JWT_SECRET) {
+  if (!ANTHROPIC_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     return {
       statusCode: 500,
       headers: CORS,
@@ -227,8 +202,16 @@ exports.handler = async function (event) {
     };
   }
 
-  // 1. Validar JWT — identidade vem do token, não do corpo
-  const auth = validarJWT(event.headers.authorization || event.headers.Authorization);
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  // 1. Validar JWT — identidade vem do token, não do corpo.
+  //    Validação via API oficial do Supabase (suporta ES256/assimétrico).
+  const auth = await validarJWT(
+    event.headers.authorization || event.headers.Authorization,
+    supabase
+  );
   if (auth.error) {
     return { statusCode: 401, headers: CORS, body: JSON.stringify({ error: auth.error }) };
   }
@@ -248,10 +231,6 @@ exports.handler = async function (event) {
   if (!mensagem.trim()) {
     return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Mensagem vazia.' }) };
   }
-
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
 
   // 2. Resolver aluno_id/escola_id NO SERVIDOR a partir do userId do token.
   //    Qualquer aluno_id no body é ignorado — defesa contra forja (Teste 10).
