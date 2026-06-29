@@ -20,6 +20,50 @@ function formatarResposta(texto) {
     .replace(/^([a-záéíóúãõâêîôûàèìòùç])/, l => l.toUpperCase());
 }
 
+// ─── Avaliação de risco SERVER-SIDE (gate obrigatório) ───────
+// Encadeamento A+: a ARIA só responde DEPOIS que esta chamada retorna.
+// Retorna { nivel, degraded } sempre — nunca lança. Se a função do
+// servidor estiver inacessível, sinaliza degraded=true para o chamador
+// cair na heurística client-side (NUNCA em silêncio / nível 0 falso).
+async function avaliarRiscoServidor({ mensagem, contextoRecente, conversaId }) {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) {
+      console.warn("[ARIA risco] sem token — modo degradado");
+      return { nivel: null, degraded: true };
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const res = await fetch("/.netlify/functions/avaliar-risco", {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        mensagem,
+        contexto_recente: contextoRecente,
+        conversa_id: conversaId || null,
+      }),
+    });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      console.warn("[ARIA risco] HTTP", res.status, "— modo degradado");
+      return { nivel: null, degraded: true };
+    }
+    const data = await res.json();
+    return { nivel: typeof data.nivel === "number" ? data.nivel : null, degraded: !!data.degraded };
+  } catch (e) {
+    console.warn("[ARIA risco] exceção — modo degradado:", e?.name || e);
+    return { nivel: null, degraded: true };
+  }
+}
+
 const MODEL      = "claude-haiku-4-5-20251001";
 const MAX_TOKENS = 600;
 const MAX_TROCAS = 15;
@@ -375,18 +419,11 @@ content: `${getSummaryPrompt()}\n\nConversa:\n${historicoTexto}`,
         });
       }
 
-      if (nivelFinal >= 2) {
-        const { error: alertaErr } = await supabase.from("alertas").insert({
-          aluno_id:    aluno.id,
-          escola_id:   aluno.escola_id,
-          conversa_id: conversaIdRef.current || null,
-          nivel:       nivelFinal,
-          categoria:   'sofrimento',
-          status:      'aberto',
-          criado_em:   new Date().toISOString(),
-        });
-        if (alertaErr) console.error("[ARIA] alerta:", alertaErr.message);
-      }
+      // NOTA: o alerta de crise NÃO é mais gravado aqui.
+      // A Edge Function avaliar-risco grava o alerta RICO (com recomendacao
+      // e idempotency_key) por turno, no momento em que o risco é detectado —
+      // não no fim da sessão. Gravar aqui também criaria duplicatas pobres.
+      // O nivel_crise_maximo da conversa (acima) preserva o pico da sessão.
 
       clearLocal(aluno.id);
     } catch (e) {
@@ -415,10 +452,8 @@ content: `${getSummaryPrompt()}\n\nConversa:\n${historicoTexto}`,
       portaInjetadaRef.current = true;
     }
 
+    // Heurística client-side: rede de segurança imediata (nível mínimo)
     const msgCrisis   = detectCrisisLevel(userText);
-    const newCrisis   = Math.max(crisisRef.current, msgCrisis);
-    crisisRef.current = newCrisis;
-    setCrisisLevel(newCrisis);
 
     const newMessages = [...messages, { role: "user", content: userText }];
     setMessages(newMessages);
@@ -426,9 +461,32 @@ content: `${getSummaryPrompt()}\n\nConversa:\n${historicoTexto}`,
     const newTrocas = trocas + 1;
     setTrocas(newTrocas);
 
-    saveLocal(aluno.id, newMessages, newTrocas, newCrisis, conversaIdRef.current);
-
     try {
+      // ── GATE OBRIGATÓRIO (A+ encadeado) ─────────────────────────
+      // Avalia o risco no SERVIDOR antes de chamar a ARIA. A resposta
+      // acolhedora só é gerada depois que isto retorna. Contexto recente
+      // = últimas mensagens (em memória, descartável; o servidor não persiste).
+      const contextoRecente = messages
+        .filter(m => m.role !== "system")
+        .slice(-6)
+        .map(m => ({ role: m.role, content: m.content }));
+
+      const risco = await avaliarRiscoServidor({
+        mensagem: userText,
+        contextoRecente,
+        conversaId: conversaIdRef.current,
+      });
+
+      // REGRA ASSIMÉTRICA: nível final = MAIOR entre servidor, heurística
+      // local e o acumulado da sessão. Nada reduz o risco já detectado.
+      // Modo degradado (servidor inacessível): heurística local assume.
+      const nivelServidor = risco.nivel ?? 0;
+      const newCrisis = Math.max(crisisRef.current, msgCrisis, nivelServidor);
+      crisisRef.current = newCrisis;
+      setCrisisLevel(newCrisis);
+
+      saveLocal(aluno.id, newMessages, newTrocas, newCrisis, conversaIdRef.current);
+
       const apiMessages = newMessages
         .filter(m => m.role !== "system")
         .map((m, i, arr) => ({
