@@ -400,7 +400,7 @@ content: `${getSummaryPrompt()}\n\nConversa:\n${historicoTexto}`,
         // Fallback: se por alguma razão não temos conversaId, inserir
         console.warn("[ARIA] saveSession sem conversaId — usando insert como fallback");
         const { data: { user } } = await supabase.auth.getUser();
-        await supabase.from("conversas").insert({
+        const { error: fallbackErr } = await supabase.from("conversas").insert({
           aluno_id:           aluno.id,
           escola_id:          aluno.escola_id,
           usuario_id:         user.id,
@@ -416,7 +416,12 @@ content: `${getSummaryPrompt()}\n\nConversa:\n${historicoTexto}`,
           encerrada:          true,
           encerrada_em:       new Date().toISOString(),
           criado_em:          new Date().toISOString(),
-        });
+        }).select("id");
+        // Antes: erro era ignorado (nem sequer capturado). Se o fallback
+        // falhar, a sessão inteira (resumo, construto, alertas já gravados
+        // via avaliar-risco) não fica sem registro de conversa em lugar
+        // nenhum — ao menos sabemos, pelo log, que precisa de investigação.
+        if (fallbackErr) console.error("[ARIA] fallback insert de conversa falhou:", fallbackErr.message);
       }
 
       // NOTA: o alerta de crise NÃO é mais gravado aqui.
