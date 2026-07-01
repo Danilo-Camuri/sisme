@@ -259,20 +259,12 @@ export default function TCLEPage() {
       setLoadingForm(false); return;
     }
 
-    // Verificar se TCLE já está assinado
-    const { data: tclePrev } = await supabase
-      .from('tcle_registros')
-      .select('id')
-      .eq('aluno_matricula', matricula.trim().toUpperCase())
-      .eq('escola_codigo', codigoEscola.toUpperCase())
-      .eq('tcle_assinado', true)
-      .eq('revogado', false)
-      .single();
-
-    if (tclePrev) {
-      setErroForm('Esta matrícula já possui autorização registrada.');
-      setLoadingForm(false); return;
-    }
+    // NOTA: a checagem de TCLE já assinado NÃO é feita aqui.
+    // A tabela consentimentos não é legível anonimamente (LGPD — nomes e
+    // hashes de responsáveis não podem vazar sem login). A verificação de
+    // duplicata roda no servidor, dentro de tcle-register.js (service_role),
+    // no momento do submit. Se já houver autorização, o servidor retorna erro
+    // e o TCLEPage exibe em erroSubmit.
 
     setAlunoEncontrado(aluno);
     setNomeAluno(aluno.nome || 'o aluno');
@@ -297,7 +289,11 @@ export default function TCLEPage() {
     setErroSubmit('');
 
     try {
-      const cpfHash = await sha256(cpf.replace(/\D/g, ''));
+      // O CPF NÃO é mais hasheado aqui. Hash sem segredo calculado no
+      // cliente não é confiável (CPF tem universo pequeno, quebrável por
+      // força bruta). O CPF cru trafega por HTTPS até o servidor, que
+      // calcula o HMAC com um segredo que nunca sai de lá. O servidor não
+      // persiste nem loga o CPF em texto puro — só o HMAC fica gravado.
       const docHash = await sha256(TCLE_TEXTO);
 
       const res = await fetch('/.netlify/functions/tcle-register', {
@@ -309,7 +305,7 @@ export default function TCLEPage() {
           aluno_matricula: matricula.trim().toUpperCase(),
           aluno_id: alunoEncontrado.id,
           responsavel_nome: nomeResp.trim(),
-          responsavel_cpf_hash: cpfHash,
+          responsavel_cpf: cpf.replace(/\D/g, ''),
           hash_documento: docHash,
           bloco_a_aceito: true,
           bloco_b_aceito: true,
@@ -563,7 +559,7 @@ export default function TCLEPage() {
             </button>
 
             <p style={{ fontSize: 12, color: '#9490A8', textAlign: 'center', marginTop: 12, lineHeight: 1.6 }}>
-              Ao confirmar, seus dados serão registrados com hash SHA-256 e timestamp de aceite conforme exigência da LGPD.
+              Ao confirmar, seus dados serão registrados de forma protegida (seu CPF nunca é armazenado em texto puro) com timestamp de aceite conforme exigência da LGPD.
             </p>
           </div>
         )}
