@@ -458,6 +458,19 @@ content: `${getSummaryPrompt()}\n\nConversa:\n${historicoTexto}`,
     const newMessages = [...messages, { role: "user", content: userText }];
     setMessages(newMessages);
     setLoading(true);
+
+    // Guarda de auto-recuperação: se por qualquer falha anterior a conversa
+    // não tem id, um alerta de risco deste turno sairia com conversa_id: null
+    // — inútil para quem precisa achar a conversa. Tenta recriar agora, antes
+    // de avaliar risco, em vez de deixar o vazio se propagar silenciosamente.
+    if (!conversaIdRef.current) {
+      console.warn("[ARIA] conversa_id ausente no início do turno — tentando recriar");
+      conversaIdRef.current = await criarConversa();
+      if (!conversaIdRef.current) {
+        console.error("[ARIA] não foi possível recriar conversa_id — alerta deste turno, se houver, ficará sem vínculo de conversa");
+      }
+    }
+
     const newTrocas = trocas + 1;
     setTrocas(newTrocas);
 
